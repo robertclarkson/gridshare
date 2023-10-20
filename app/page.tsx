@@ -1,113 +1,239 @@
-import Image from 'next/image'
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+
+import { getClient } from "@/lib/client";
+
+import { gql } from "@apollo/client";
+
+export default async function Home() {
+    const luxor_key = process.env.LUXOR_API_KEY;
+    console.log('luxor_key', luxor_key)
+    const subaccounts = async () => {
+        const query = gql`
+            query getSubaccounts {
+                users(first: 10) {
+                    nodes {
+                        username
+                    }
+                }
+            }`;
+
+        const { data } = await getClient().query({ query });
+        return data;
+    }
+    const subaccountsHashrateHistory = async () => {
+        const query = gql`
+            query getAllSubaccountsHashrateHistory (
+                $mpn: MiningProfileName, 
+                $inputInterval: HashrateIntervals, 
+                $first: Int
+            ) {
+                getAllSubaccountsHashrateHistory(
+                    mpn: $mpn, 
+                    inputInterval: $inputInterval, 
+                    first: $first
+                ) {
+                    edges {
+                        node {
+                            hashrateHistory
+                            username
+                        }
+                    }
+                }
+            }`;
+        const variables = {
+            mpn: "BTC",
+            inputInterval: "_15_MINUTE", //other options are: "_1_HOUR", "_6_HOUR" and "_1_DAY"
+            first: 10,
+        }
+
+        const { data } = await getClient().query({ query, variables });
+        return data;
+    }
+    const getMiningSummary = async () => {
+        const query = gql`
+            query getMiningSummary(
+                $mpn: MiningProfileName!, 
+                $userName: String!, 
+                $inputDuration: HashrateIntervals!
+            ) {
+                getMiningSummary(
+                    mpn: $mpn, 
+                    userName: $userName, 
+                    inputDuration: $inputDuration
+                ) {
+                    username
+                    validShares
+                    invalidShares
+                    staleShares
+                    lowDiffShares
+                    badShares
+                    duplicateShares
+                    revenue
+                    hashrate
+                }
+            }
+        `;
+        const variables = {
+            userName: "onesandzeros",
+            mpn: "BTC",
+            inputDuration: "_15_MINUTE", //other options are: "_1_HOUR", "_6_HOUR" and "_1_DAY"
+        }
+
+        const { data } = await getClient().query({ query, variables });
+        return data;
+    }
+
+    const getHashrateScoreHistory = async () => {
+        const query = gql`
+            query getHashrateScoreHistory(
+                $mpn: MiningProfileName!, 
+                $uname: String!, 
+                $first : Int
+            ) {
+                getHashrateScoreHistory(
+                    mpn: $mpn, 
+                    uname: $uname, 
+                    first: $first, 
+                    orderBy: DATE_DESC
+                ) {
+                    nodes {
+                        date
+                        efficiency
+                        hashrate
+                        revenue
+                        uptimePercentage
+                        uptimeTotalMinutes
+                        uptimeTotalMachines
+                    }
+                }
+            }
+        `;
+        const variables = {
+            mpn: "BTC",
+            uname: "onesandzeros",
+            first: 1000,
+        }
+
+        const { data } = await getClient().query({ query, variables });
+        return data;
+    }
+
+    const accounts = await subaccounts();
+    const hash = await subaccountsHashrateHistory();
+    const summary = await getMiningSummary();
+    const score = await getHashrateScoreHistory();
+    console.log('sumscoremary', score.getHashrateScoreHistory.nodes)
+    return <main>
+        {accounts.users.nodes.map(user => {
+            return <div>{user.username}</div>
+        })}
+        {/* {hash.getAllSubaccountsHashrateHistory.edges.map(node => {
+            // console.log('node', node.node.username);
+            // console.log('node.hashrateHistory', node.node.hashrateHistory);
+            return node.node.hashrateHistory.map(history => {
+                // console.log('history', history)
+                return <div>{history.time} {history.hashrate}</div>
+            })
+        })} */}
+        <table className="">
+            <tr>
+                <th className="border">date</th>
+                <th className="border">efficiency</th>
+                <th className="border">hashrate</th>
+                <th className="border">revenue</th>
+                <th className="border">uptimePercentage</th>
+                <th className="border">uptimeTotalMinutes</th>
+                <th className="border">uptimeTotalMachines}</th>
+            </tr>
+            {score.getHashrateScoreHistory.nodes.map(score => {
+
+                return <tr>
+                    <td className="border">{score.date}</td>
+                    <td className="border">{score.efficiency}</td>
+                    <td className="border">{score.hashrate}</td>
+                    <td className="border">{score.revenue}</td>
+                    <td className="border">{score.uptimePercentage}</td>
+                    <td className="border">{score.uptimeTotalMinutes}</td>
+                    <td className="border">{score.uptimeTotalMachines}</td>
+                </tr>
+            })}
+        </table>
+
+    </main>;
+
+
+    // const fetch = require("isomorphic-fetch");
+
+    // const subaccounts = async () => {
+    //     const result = await fetch("https://api.beta.luxor.tech/graphql", {
+    //         method: "POST",
+    //         headers: {
+    //             "x-lux-api-key": luxor_key,
+    //             "Content-Type": "application/json",
+    //         },
+    //         body: JSON.stringify({
+    //             query: `
+
+    //       query getSubaccounts {
+    //         users(first: 10) {
+    //           nodes {
+    //             username
+    //           }
+    //         }
+    //       }
+    //         `,
+    //             variables: null,
+    //         }),
+    //     });
+
+    //     return await result.json();
+    // };
+    // const subacc = await subaccounts();
+    // console.log('subacc', JSON.stringify(subacc))
+
+    // const subaccountsHashrateHistory = async () => {
+    //     const result = await fetch("https://api.beta.luxor.tech/graphql", {
+    //         method: "POST",
+    //         headers: {
+    //             "x-lux-api-key": luxor_key,
+    //             "Content-Type": "application/json",
+    //         },
+    //         body: JSON.stringify({
+    //             query: `
+    //     query getAllSubaccountsHashrateHistory (
+    //         $mpn: MiningProfileName, 
+    //         $inputInterval: HashrateIntervals, 
+    //         $first: Int
+    //     ) {
+    //         getAllSubaccountsHashrateHistory(
+    //             mpn: $mpn, 
+    //             inputInterval: $inputInterval, 
+    //             first: $first
+    //         ) {
+    //             edges {
+    //                 node {
+    //                     hashrateHistory
+    //                     username
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     `,
+    //             variables: {
+    //                 mpn: "BTC",
+    //                 inputInterval: "_15_MINUTE", //other options are: "_1_HOUR", "_6_HOUR" and "_1_DAY"
+    //                 first: 10,
+    //             },
+    //         }),
+    //     });
+
+    //     return await result.json();
+    // };
+    // const hash = await subaccountsHashrateHistory();
+    // console.log('hash', hash.data.getAllSubaccountsHashrateHistory.edges)
+    return (
+        <div>
+            <h1>Hello, Home page!</h1>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    )
 }
