@@ -233,12 +233,12 @@ export default async function Home() {
         try {
             bitcoinValue = allPrices.find(findit => {
                 finder = { ...findit };
-                console.log(new Date(item.date).toISOString(), findit.date.toISOString());
+                // console.log(new Date(item.date).toISOString(), findit.date.toISOString());
                 return new Date(item.date).toISOString() == findit.date.toISOString()
             }).price * parseFloat(item.revenue)
         }
         catch (error) {
-            console.log(error, "looking for", finder)
+            // console.log(error, "looking for", finder)
         }
         const profit = bitcoinValue - elect;
         totalProfit = totalProfit + profit;
