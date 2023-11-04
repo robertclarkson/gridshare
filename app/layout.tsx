@@ -18,7 +18,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <Providers>
-                <body className={inter.className}>
+                <body className={inter.className} style={{ minHeight: '100vh' }}>
                     <Header />
                     {children}
                 </body>

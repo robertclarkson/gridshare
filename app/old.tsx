@@ -1,11 +1,9 @@
 
 
+import { getClient } from "@/lib/client";
 
-import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
@@ -15,27 +13,85 @@ const getUser = async (id: string) => {
 };
 export default async function Home() {
     console.log('Reloading page...')
-    const session: any = await getServerSession(authOptions);
-    if (!session || !session.userId) {
-        return <div>
-            <h1>You need to log in first</h1>
-        </div>
-    }
-    const profile = await getUser(session.userId);
-    const luxor_key = profile?.luxorApiKey ? profile?.luxorApiKey : null;
+    const luxor_key = process.env.LUXOR_API_KEY;
     // console.log('luxor_key', luxor_key)
-    if (!luxor_key) {
-        return <div>
-            <h1>Go to the settings and set your Luxor API key</h1>
-        </div>
+
+    const subaccounts = async () => {
+        const query = gql`
+            query getSubaccounts {
+                users(first: 10) {
+                    nodes {
+                        username
+                    }
+                }
+            }`;
+
+        const { data } = await getClient().query({ query });
+        return data;
     }
 
-    const luxor_account = profile?.luxorAccount ? profile?.luxorAccount : null;
-    if (!luxor_account) {
-        return <div>
-            <h1>Go to the settings and select your Luxor Account</h1>
-        </div>
-    }
+    // const subaccountsHashrateHistory = async () => {
+    //     const query = gql`
+    //         query getAllSubaccountsHashrateHistory (
+    //             $mpn: MiningProfileName, 
+    //             $inputInterval: HashrateIntervals, 
+    //             $first: Int
+    //         ) {
+    //             getAllSubaccountsHashrateHistory(
+    //                 mpn: $mpn, 
+    //                 inputInterval: $inputInterval, 
+    //                 first: $first
+    //             ) {
+    //                 edges {
+    //                     node {
+    //                         hashrateHistory
+    //                         username
+    //                     }
+    //                 }
+    //             }
+    //         }`;
+    //     const variables = {
+    //         mpn: "BTC",
+    //         inputInterval: "_15_MINUTE", //other options are: "_1_HOUR", "_6_HOUR" and "_1_DAY"
+    //         first: 10,
+    //     }
+
+    //     const { data } = await getClient().query({ query, variables });
+    //     return data;
+    // }
+    // const getMiningSummary = async () => {
+    //     const query = gql`
+    //         query getMiningSummary(
+    //             $mpn: MiningProfileName!, 
+    //             $userName: String!, 
+    //             $inputDuration: HashrateIntervals!
+    //         ) {
+    //             getMiningSummary(
+    //                 mpn: $mpn, 
+    //                 userName: $userName, 
+    //                 inputDuration: $inputDuration
+    //             ) {
+    //                 username
+    //                 validShares
+    //                 invalidShares
+    //                 staleShares
+    //                 lowDiffShares
+    //                 badShares
+    //                 duplicateShares
+    //                 revenue
+    //                 hashrate
+    //             }
+    //         }
+    //     `;
+    //     const variables = {
+    //         userName: "onesandzeros",
+    //         mpn: "BTC",
+    //         inputDuration: "_15_MINUTE", //other options are: "_1_HOUR", "_6_HOUR" and "_1_DAY"
+    //     }
+
+    //     const { data } = await getClient().query({ query, variables });
+    //     return data;
+    // }
 
     //Query for our historical hashrate mining data.
     const getHashrateScoreHistory = async () => {
@@ -65,17 +121,49 @@ export default async function Home() {
         `;
         const variables = {
             mpn: "BTC",
-            uname: luxor_account,
+            uname: "onesandzeros",
             first: 1000,
         }
 
-        const { data } = await graphQlClient(luxor_key).query({ query, variables });
+        const { data } = await getClient().query({ query, variables });
         return data;
     }
 
+    const accounts = await subaccounts();
     // const hash = await subaccountsHashrateHistory();
     // const summary = await getMiningSummary();
     const score = await getHashrateScoreHistory();
+
+
+
+    // const hashData = [];
+    // hashData.push([
+    //     "date", "efficiency", "hashrate", "revenue", "uptimePercent", "uptimeMinutes", "uptimeMachines"
+    // ])
+    // score.getHashrateScoreHistory.nodes.forEach((item: any) => {
+    //     hashData.push(
+    //         [
+    //             new Date(item.date),
+    //             parseFloat(item.efficiency),
+    //             parseFloat(item.hashrate),
+    //             parseFloat(item.revenue),
+    //             parseFloat(item.uptimePercentage),
+    //             parseInt(item.uptimeTotalMinutes),
+    //             parseInt(item.uptimeTotalMachines),
+    //         ]
+    //     )
+    // })
+
+    // {
+    //     __typename: 'ReturnHashrateScoreHistory',
+    //     date: '2023-08-19T00:00:00+00:00',
+    //     efficiency: '99.9008',
+    //     hashrate: '3288096852941646.5067',
+    //     revenue: '0.00801414',
+    //     uptimePercentage: '99.13',
+    //     uptimeTotalMinutes: '38542',
+    //     uptimeTotalMachines: '27'
+    //   },
 
     //sort the data in date order ascending
     let totalRevenue = 0;
@@ -171,6 +259,7 @@ export default async function Home() {
             ]
         )
 
+
         hashUptime.push(
             [
                 new Date(item.date),
@@ -185,17 +274,23 @@ export default async function Home() {
         )
     })
 
+
+
+
+
+    // console.log(revenueCume)
+    // console.log('sumscoremary', score.getHashrateScoreHistory.nodes)
     return <main>
+        {/* {hash.getAllSubaccountsHashrateHistory.edges.map(node => {
+            // console.log('node', node.node.username);
+            // console.log('node.hashrateHistory', node.node.hashrateHistory);
+            return node.node.hashrateHistory.map(history => {
+                // console.log('history', history)
+                return <div>{history.time} {history.hashrate}</div>
+            })
+        })} */}
         <table cellPadding={5}>
             <tbody>
-                <tr>
-                    <th className="border">Miner Avg Wattage</th>
-                    <td className="border">{profile?.minerWatts ? profile?.minerWatts : '?'} watts</td>
-                </tr>
-                <tr>
-                    <th className="border">Miner $/KWh</th>
-                    <td className="border">${profile?.electricityPriceUsd ? profile?.electricityPriceUsd : '?'} USD</td>
-                </tr>
                 <tr>
                     <th className="border">Total Bitcoin Mined</th>
                     <td className="border">{totalBitcoin.toFixed(8)}</td>
@@ -244,6 +339,7 @@ export default async function Home() {
                 })}
             </tbody>
         </table>
+
     </main >;
 
 }

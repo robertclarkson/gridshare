@@ -3,7 +3,7 @@
 import { Button, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem, User } from "@nextui-org/react";
 import { useSession } from "next-auth/react";
 
-export default function Header(props) {
+export default function Header(props: any) {
     const { data: session, status } = useSession()
 
     return (
@@ -13,18 +13,18 @@ export default function Header(props) {
             </NavbarBrand>
             <NavbarContent className="hidden sm:flex gap-4" justify="center">
                 <NavbarItem>
-                    <Link color="foreground" href="#">
-                        Features
+                    <Link color="foreground" href="/">
+                        Stats
                     </Link>
                 </NavbarItem>
                 <NavbarItem isActive>
-                    <Link href="#" aria-current="page">
-                        Customers
+                    <Link aria-current="page" href="/charts">
+                        Charts
                     </Link>
                 </NavbarItem>
                 <NavbarItem>
-                    <Link color="foreground" href="#">
-                        Integrations
+                    <Link color="foreground" href="/settings">
+                        Settings
                     </Link>
                 </NavbarItem>
             </NavbarContent>
@@ -35,7 +35,7 @@ export default function Header(props) {
                         name={session.user?.name}
                         description={session.user?.email}
                         avatarProps={{
-                            src: session.user?.image,
+                            src: session.user?.image ? session.user?.image : undefined,
                         }}
                     />
                 )}
