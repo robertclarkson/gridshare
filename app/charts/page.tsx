@@ -1,5 +1,3 @@
-
-
 import { graphQlClient } from "@/lib/client";
 
 import { gql } from "@apollo/client";
@@ -49,7 +47,7 @@ export default async function Home() {
                     mpn: $mpn, 
                     uname: $uname, 
                     first: $first, 
-                    orderBy: DATE_DESC
+                    orderBy: DATE_ASC
                 ) {
                     nodes {
                         date

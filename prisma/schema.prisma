@@ -51,6 +51,7 @@ model User {
 
     accounts Account[]
     sessions Session[]
+    HashDay  HashDay[]
 }
 
 model VerificationToken {
@@ -59,4 +60,18 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model HashDay {
+    id                  String   @id @default(cuid())
+    date                DateTime
+    efficiency          Float
+    hashrate            Float
+    revenue             Float
+    uptimePercentage    Float
+    uptimeTotalMinutes  Int
+    uptimeTotalMachines Int
+    averagePrice        Float
+    userId              String
+    user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
