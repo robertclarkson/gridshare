@@ -1,8 +1,6 @@
-
-
 import { NextResponse } from "next/server";
 
-import { getClient } from "@/lib/client";
+import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -10,7 +8,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
-const subaccounts = async () => {
+const subaccounts = async (luxor_key) => {
     const query = gql`
         query getSubaccounts {
             users(first: 10) {
@@ -18,11 +16,12 @@ const subaccounts = async () => {
                     username
                 }
             }
-        }`;
+        }
+    `;
 
-    const { data } = await getClient().query({ query });
+    const { data } = await graphQlClient(luxor_key).query({ query });
     return data;
-}
+};
 
 export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
@@ -37,8 +36,8 @@ export async function GET(request: Request) {
         });
         let subAcc = [];
         if (result.luxorApiKey) {
-            const accounts = await subaccounts();
-            subAcc = accounts.users.nodes.map((user: any, index: number) => user.username)
+            const accounts = await subaccounts(result.luxorApiKey);
+            subAcc = accounts.users.nodes.map((user: any, index: number) => user.username);
         }
 
         return NextResponse.json({ result: { ...result, accounts: subAcc } });
@@ -53,7 +52,6 @@ export async function POST(request: Request) {
     if (!userId) {
         return NextResponse.json({ error: "Not logged in" });
     }
-
 
     const result = await prisma.user.update({
         where: {

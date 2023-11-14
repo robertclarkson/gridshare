@@ -1,4 +1,3 @@
-
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Card } from "@nextui-org/card";
 import { PrismaClient } from "@prisma/client";
@@ -23,7 +22,7 @@ export default async function Profile() {
     return (
         <div className="bg h-screen">
             <div>
-                <h1 className="mb-4 text-center">Profile</h1>
+                <h1 className="mb-4 text-center">Settings</h1>
                 <div className="flex w-full justify-center items-center">
                     <Card className="max-w-[500px] m-5 p-5">{profile && <UserSettings />}</Card>
                 </div>

@@ -1,19 +1,17 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { PrismaClient } from "@prisma/client"
-import NextAuth, { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
+import NextAuth, { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
-const prisma = new PrismaClient()
-
-
+const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID : "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET : ""
-        })
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET : "",
+        }),
     ],
     session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
     secret: process.env.NEXTAUTH_SECRET,
@@ -22,7 +20,6 @@ export const authOptions: NextAuthOptions = {
         maxAge: 60 * 60 * 24 * 30,
     },
     callbacks: {
-
         async session({ session, token, user }) {
             // Send properties to the client, like an access_token and user id from a provider.
             // session.accessToken = token.accessToken
@@ -47,11 +44,9 @@ export const authOptions: NextAuthOptions = {
             // console.log({ token, user });
             return await { ...token, ...(user && { role: user.role }) };
         },
-
-    }
-}
+    },
+};
 
 const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST }
-
+export { handler as GET, handler as POST };

@@ -20,33 +20,31 @@ export default function FieldEditor(props: any) {
                         setInputValue(!inputValue);
                     }}
                 />
-            ) :
-                (options?.length > 0 ?
-                    <Select
-                        label={"Select " + field}
-                        className="max-w-xs"
-                        onSelectionChange={(selectedOption: any) => {
-                            mutation.mutate({ id: id, [field]: selectedOption.currentKey });
-                            setEditingMode(false);
-                        }}
-                    >
-                        {options.map((option: any) => (
-                            <SelectItem key={option} value={option}>
-                                {option}
-                            </SelectItem>
-                        ))}
-                    </Select >
-                    :
-                    <Input
-                        type="text"
-                        value={inputValue}
-                        onChange={(event) => {
-                            setInputValue(event.target.value);
-                        }}
-                    />
-                )
-            }
-            {options?.length == 0 &&
+            ) : options?.length > 0 ? (
+                <Select
+                    label={"Select " + field}
+                    className="max-w-xs"
+                    onSelectionChange={(selectedOption: any) => {
+                        mutation.mutate({ id: id, [field]: selectedOption.currentKey });
+                        setEditingMode(false);
+                    }}
+                >
+                    {options.map((option: any) => (
+                        <SelectItem style={{ color: "black" }} key={option} value={option}>
+                            {option}
+                        </SelectItem>
+                    ))}
+                </Select>
+            ) : (
+                <Input
+                    type="text"
+                    value={inputValue}
+                    onChange={(event) => {
+                        setInputValue(event.target.value);
+                    }}
+                />
+            )}
+            {options?.length == 0 && (
                 <>
                     <Button
                         onPress={() => {
@@ -56,7 +54,8 @@ export default function FieldEditor(props: any) {
                     >
                         Save
                     </Button>
-                </>}
+                </>
+            )}
 
             <Button
                 onPress={() => {
