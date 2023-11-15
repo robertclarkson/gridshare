@@ -1,10 +1,9 @@
 import { graphQlClient } from "@/lib/client";
-
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
-import MiningChart from "./MiningChart";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import { Card } from "@nextui-org/react";
 
 const prisma = new PrismaClient();
 
@@ -26,17 +25,22 @@ export default async function Home() {
     const luxor_key = profile?.luxorApiKey ? profile?.luxorApiKey : null;
     // console.log('luxor_key', luxor_key)
     if (!luxor_key) {
-        return <h1>Go to the settings and set your Luxor API key</h1>;
+        return (
+            <Card className="max-w-[500px] m-auto mh-5 p-5">
+                <h1>Go to the settings and set your Luxor API key</h1>
+            </Card>
+        );
     }
 
     const luxor_account = profile?.luxorAccount ? profile?.luxorAccount : null;
     if (!luxor_account) {
         return (
-            <div>
+            <Card className="max-w-[500px] m-auto mh-5 p-5">
                 <h1>Go to the settings and select your Luxor Account</h1>
-            </div>
+            </Card>
         );
     }
+
     //Query for our historical hashrate mining data.
     const getHashrateScoreHistory = async () => {
         const query = gql`
@@ -56,7 +60,7 @@ export default async function Home() {
         `;
         const variables = {
             mpn: "BTC",
-            uname: "onesandzeros",
+            uname: luxor_account,
             first: 1000,
         };
 
@@ -125,7 +129,6 @@ export default async function Home() {
     let totalElecCost = 0;
     let totalProfit = 0;
     totalHashArray.forEach((item: any) => {
-        console.log(item);
         totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
@@ -148,6 +151,7 @@ export default async function Home() {
         totalProfit = totalProfit + profit;
         totalBitcoinValue += bitcoinValue;
         hashRevenue.push([new Date(item.date), parseFloat(item.revenue), bitcoinValue, elect, profit]);
+
         hashUptime.push([new Date(item.date), parseFloat(item.uptimePercentage)]);
         relativeMining.push([
             new Date(item.date),
@@ -155,30 +159,69 @@ export default async function Home() {
         ]);
     });
 
-    // console.log(revenueCume)
-    // console.log('sumscoremary', score.getHashrateScoreHistory.nodes)
     return (
         <main>
-            <MiningChart
-                data={hashRevenue}
-                options={{
-                    title: "Mining daily stats",
-                    series: {
-                        0: { targetAxisIndex: 0 },
-                        1: { targetAxisIndex: 1 },
-                        2: { targetAxisIndex: 1 },
-                        3: { targetAxisIndex: 1 },
-                    },
-                    vAxes: {
-                        // Adds titles to each axis.
-                        0: { title: "Bitcoin Mined" },
-                        1: { title: "$ NZD" },
-                    },
-                }}
-            />
-            <MiningChart data={hashUptime} options={{ title: "Miner Daily Uptime %" }} />
-            <MiningChart data={relativeMining} options={{ title: "Bitcoin per unit uptime" }} />
-            <MiningChart data={coinPrice} options={{ title: "Bitcoin Price" }} />
+            <table cellPadding={5}>
+                <tbody>
+                    <tr>
+                        <th className="border">Miner Avg Wattage</th>
+                        <td className="border">{profile?.minerWatts ? profile?.minerWatts : "?"} watts</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Miner $/KWh</th>
+                        <td className="border">
+                            ${profile?.electricityPriceUsd ? profile?.electricityPriceUsd : "?"} USD
+                        </td>
+                    </tr>
+                    <tr>
+                        <th className="border">Total Bitcoin Mined</th>
+                        <td className="border">{totalBitcoin.toFixed(8)}</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Total Electricity Used</th>
+                        <td className="border">{parseFloat(totalElec.toFixed(2)).toLocaleString()} KWh</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Total Electricity Cost</th>
+                        <td className="border">${parseFloat(totalElecCost.toFixed(2)).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Approx Bitcoin Value</th>
+                        <td className="border">${parseFloat(totalBitcoinValue.toFixed(2)).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Theoretical Profit</th>
+                        <td className="border">${parseFloat(totalProfit.toFixed(2)).toLocaleString()}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table className="">
+                <tbody>
+                    <tr>
+                        <th className="border">date</th>
+                        <th className="border">efficiency</th>
+                        <th className="border">hashrate</th>
+                        <th className="border">revenue</th>
+                        <th className="border">uptimePercentage</th>
+                        <th className="border">uptimeTotalMinutes</th>
+                        <th className="border">uptimeTotalMachines</th>
+                    </tr>
+                    {score.getHashrateScoreHistory.nodes.map((score: any, index: number) => {
+                        return (
+                            <tr key={index}>
+                                <td className="border">{score.date}</td>
+                                <td className="border">{score.efficiency}</td>
+                                <td className="border">{score.hashrate}</td>
+                                <td className="border">{score.revenue}</td>
+                                <td className="border">{score.uptimePercentage}</td>
+                                <td className="border">{score.uptimeTotalMinutes}</td>
+                                <td className="border">{score.uptimeTotalMachines}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         </main>
     );
 }

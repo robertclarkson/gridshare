@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 
 import { graphQlClient } from "@/lib/client";
@@ -11,17 +10,8 @@ const prisma = new PrismaClient();
 
 const getHashrateScoreHistory = async (luxor_key: string, subaccount: string) => {
     const query = gql`
-        query getHashrateScoreHistory(
-            $mpn: MiningProfileName!, 
-            $uname: String!, 
-            $first : Int
-        ) {
-            getHashrateScoreHistory(
-                mpn: $mpn, 
-                uname: $uname, 
-                first: $first, 
-                orderBy: DATE_ASC
-            ) {
+        query getHashrateScoreHistory($mpn: MiningProfileName!, $uname: String!, $first: Int) {
+            getHashrateScoreHistory(mpn: $mpn, uname: $uname, first: $first, orderBy: DATE_ASC) {
                 nodes {
                     date
                     efficiency
@@ -38,11 +28,11 @@ const getHashrateScoreHistory = async (luxor_key: string, subaccount: string) =>
         mpn: "BTC",
         uname: subaccount,
         first: 1000,
-    }
+    };
 
     const { data } = await graphQlClient(luxor_key).query({ query, variables });
     return data;
-}
+};
 
 export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
@@ -56,98 +46,99 @@ export async function GET(request: Request) {
             },
         });
         if (user.luxorApiKey && user.luxorAccount) {
-            const storedHash = await prisma.HashDay.findMany({
+            const storedHash = await prisma.hashDay.findMany({
                 where: {
                     userId: session.userId,
                 },
                 orderBy: {
-                    date: 'desc'
-                }
+                    date: "desc",
+                },
             });
-            console.log('found records: ', storedHash.length)
+            console.log("found records: ", storedHash.length);
 
             const hashHistory = await getHashrateScoreHistory(user.luxorApiKey, user.luxorAccount);
             const totalHashArray = [...hashHistory.getHashrateScoreHistory.nodes];
 
-            const startDateISO = new Date(totalHashArray[0].date).toISOString()
-            console.log('First Date = ', startDateISO)
-
-            let config = {
-                method: 'get',
-                maxBodyLength: Infinity,
-                url: 'https://rest.coinapi.io/v1/exchangerate/BTC/NZD/history?period_id=1DAY&time_start=' + startDateISO + '&limit=' + totalHashArray.length,
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CoinAPI-Key': '46CB7B06-7BFF-4D44-BD58-7E181FD37D63'
-                }
-            };
-            const axios = require('axios');
-            const coinPrice = [];
-            await axios(config)
-                .then((response: any) => {
-                    // console.log(JSON.stringify(response.data));
-                    response.data.forEach((item: any) => {
-                        coinPrice.push([new Date(item.time_period_start), (item.rate_high + item.rate_low) / 2]);
-                    })
-                })
-                .catch((error: any) => {
-                    console.log('ERROR', error.message);
-                    console.log('ERROR', error.response.data);
+            const nzdBTC = async (from: number, to: number) => {
+                return await fetch(
+                    "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=nzd&from=" +
+                        from +
+                        "&to=" +
+                        to +
+                        "&precision=0"
+                ).then((result) => {
+                    return result.json().then((json) => {
+                        if (json.prices) {
+                            console.log("json", json);
+                            return json.prices;
+                        } else {
+                            console.log("No market data", json);
+                        }
+                    });
                 });
+            };
 
-            console.log
+            console.log(
+                "get prices from ",
+                new Date(totalHashArray[0].date).valueOf() / 1000,
+                new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
+            );
+            const rates = await nzdBTC(
+                new Date(totalHashArray[0].date).valueOf() / 1000,
+                new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
+            );
+            console.log(rates);
+
             totalHashArray.forEach((hash: any) => {
                 // const hash = totalHashArray[0];
                 const foundHash = storedHash.find((dbHash: any) => {
-                    return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString()
+                    return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
                 });
                 if (!foundHash) {
-                    console.log('hash not found hash.date == dbHash.date', hash.date)
-                    const todaysPrice = coinPrice.find(price => {
-                        return price[0] == new Date(hash.date)
-                    })
-                    prisma.hashDay.create({
-                        data: {
-                            date: hash.date,
-                            efficiency: parseFloat(hash.efficiency),
-                            hashrate: parseFloat(hash.hashrate),
-                            revenue: parseFloat(hash.revenue),
-                            uptimePercentage: parseFloat(hash.uptimePercentage),
-                            uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
-                            uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
-                            averagePrice: parseFloat(todaysPrice ? todaysPrice[1] : 0),
-                            userId: user.id
-                        },
-                    })
-                        .catch((error: any) => {
-                            console.log('ERROR', error.message);
-                            console.log('ERROR', error.response.data);
-                        });
-
-                }
-                else {
-                    if (foundHash.averagePrice == 0) {
-                        const todaysPrice = coinPrice.find(price => {
-                            // console.log((price[0]).toISOString(), new Date(hash.date).toISOString())
-                            return new Date(price[0]).toISOString() == new Date(hash.date).toISOString()
+                    console.log("foundHash date", new Date(hash.date).toDateString());
+                    const rate = rates.find((item) => {
+                        return item[0] == new Date(hash.date).valueOf();
+                    });
+                    prisma.hashDay
+                        .create({
+                            data: {
+                                date: hash.date,
+                                efficiency: parseFloat(hash.efficiency),
+                                hashrate: parseFloat(hash.hashrate),
+                                revenue: parseFloat(hash.revenue),
+                                uptimePercentage: parseFloat(hash.uptimePercentage),
+                                uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
+                                uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
+                                averagePrice: parseFloat(rate ? rate[1] : 0),
+                                userId: user.id,
+                            },
                         })
-                        console.log('updating price id', foundHash.id, ' with this dates price', todaysPrice);
-                        if (todaysPrice) {
-                            prisma.HashDay.update({
+                        .catch((error: any) => {
+                            console.log("ERROR", error.message);
+                            console.log("ERROR", error.response.data);
+                        });
+                } else {
+                    if (foundHash.averagePrice == 0) {
+                        console.log("foundHash date", foundHash.date.toString().substr(0, 10));
+                        const rate = rates.find((item) => {
+                            return item[0] == new Date(foundHash.date).valueOf();
+                        });
+                        console.log("updating price id", foundHash.id, " with this dates price", rate);
+                        if (rate) {
+                            prisma.hashDay.update({
                                 where: {
                                     id: foundHash.id,
                                 },
                                 data: {
-                                    averagePrice: todaysPrice[1]
-                                }
+                                    averagePrice: rate[1],
+                                },
                             });
-                        }
-                        else {
-                            console.log('todays price cant be found')
+                        } else {
+                            console.log("todays price cant be found");
                         }
                     }
                 }
-            })
+            });
         }
 
         return NextResponse.json({ result: "success" });

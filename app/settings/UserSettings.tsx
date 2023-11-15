@@ -1,5 +1,5 @@
 "use client";
-import { Spacer, Spinner } from "@nextui-org/react";
+import { Button, Spacer, Spinner } from "@nextui-org/react";
 import { User } from "@prisma/client";
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -18,7 +18,6 @@ export default function UserSettings() {
 interface UsersApiReturnData {
     result: User;
 }
-
 
 function UserPanel() {
     const { isLoading, error, data } = useQuery<UsersApiReturnData, AxiosError, UsersApiReturnData>({
@@ -49,9 +48,9 @@ function UserPanel() {
             queryClient.invalidateQueries({ queryKey: ["user"] });
         },
     });
-    if (error) return "An error has occurred: " + error.message;
+    if (error) return <div>An error has occurred: {error.message}</div>;
     if (isLoading) return <Spinner />;
-    if (!data) return <h1>No data returned for this user</h1>
+    if (!data) return <h1>No data returned for this user</h1>;
 
     return (
         <div className="flex flex-col space-y-6">
@@ -104,6 +103,36 @@ function UserPanel() {
                 </div>
             </div>
             <Spacer />
+            <div>
+                <label>Actions</label>
+                <div>
+                    <p>Hash Records #{data.result.HashDay.length}</p>
+                    <Button
+                        onPress={() => {
+                            fetch("/api/importStats", {
+                                method: "GET",
+                            }).then((response) => {
+                                queryClient.invalidateQueries({ queryKey: ["user"] });
+                                alert("Done");
+                            });
+                        }}
+                    >
+                        Import Hash Data
+                    </Button>
+                    <Button
+                        onPress={() => {
+                            fetch("/api/storedData", {
+                                method: "POST",
+                            }).then((response) => {
+                                queryClient.invalidateQueries({ queryKey: ["user"] });
+                                alert("Done");
+                            });
+                        }}
+                    >
+                        Clear All Hash Data
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

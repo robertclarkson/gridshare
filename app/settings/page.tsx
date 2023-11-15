@@ -24,7 +24,9 @@ export default async function Profile() {
             <div>
                 <h1 className="mb-4 text-center">Settings</h1>
                 <div className="flex w-full justify-center items-center">
-                    <Card className="max-w-[500px] m-5 p-5">{profile && <UserSettings />}</Card>
+                    <Card className="max-w-[500px] m-5 p-5">
+                        {profile ? <UserSettings /> : <p>You have no profile yet.</p>}
+                    </Card>
                 </div>
             </div>
         </div>

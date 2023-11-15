@@ -1,10 +1,10 @@
-
-"use client"
+"use client";
 import { Button, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem, User } from "@nextui-org/react";
 import { useSession } from "next-auth/react";
+import { ThemeSwitcher } from "./components/ThemeSwitcher";
 
 export default function Header(props: any) {
-    const { data: session, status } = useSession()
+    const { data: session, status } = useSession();
 
     return (
         <Navbar>
@@ -29,6 +29,7 @@ export default function Header(props: any) {
                 </NavbarItem>
             </NavbarContent>
             <NavbarContent justify="end">
+                <ThemeSwitcher />
                 {session && (
                     <User
                         id="user"
@@ -41,19 +42,11 @@ export default function Header(props: any) {
                 )}
                 {!session && (
                     <NavbarItem>
-                        <Button
-                            as={Link}
-                            color="primary"
-                            href="/api/auth/signin"
-                            variant="flat"
-                        >
+                        <Button as={Link} color="primary" href="/api/auth/signin" variant="flat">
                             Sign Up
                         </Button>
                     </NavbarItem>
                 )}
-
-
-
             </NavbarContent>
         </Navbar>
     );

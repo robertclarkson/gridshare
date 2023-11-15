@@ -30,7 +30,7 @@ export default function FieldEditor(props: any) {
                     }}
                 >
                     {options.map((option: any) => (
-                        <SelectItem style={{ color: "black" }} key={option} value={option}>
+                        <SelectItem key={option} value={option}>
                             {option}
                         </SelectItem>
                     ))}
@@ -44,18 +44,15 @@ export default function FieldEditor(props: any) {
                     }}
                 />
             )}
-            {options?.length == 0 && (
-                <>
-                    <Button
-                        onPress={() => {
-                            mutation.mutate({ id: id, [field]: inputValue });
-                            setEditingMode(false);
-                        }}
-                    >
-                        Save
-                    </Button>
-                </>
-            )}
+
+            <Button
+                onPress={() => {
+                    mutation.mutate({ id: id, [field]: inputValue });
+                    setEditingMode(false);
+                }}
+            >
+                Save
+            </Button>
 
             <Button
                 onPress={() => {

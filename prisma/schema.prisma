@@ -48,6 +48,7 @@ model User {
     luxorApiKey         String?
     minerWatts          Int?
     electricityPriceUsd Float?
+    coinAPIKey          String?
 
     accounts Account[]
     sessions Session[]

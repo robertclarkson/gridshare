@@ -33,6 +33,9 @@ export async function GET(request: Request) {
             where: {
                 id: session.userId,
             },
+            include: {
+                HashDay: true,
+            },
         });
         let subAcc = [];
         if (result.luxorApiKey) {

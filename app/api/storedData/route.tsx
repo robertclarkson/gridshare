@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 
 import { PrismaClient } from "@prisma/client";
@@ -24,11 +23,25 @@ export async function GET(request: Request) {
                     userId: session.userId,
                 },
                 orderBy: {
-                    date: 'desc'
-                }
+                    date: "desc",
+                },
             });
-            return NextResponse.json(storedHash);
 
+            return NextResponse.json(storedHash);
         }
+    }
+}
+
+export async function POST(request: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+        // Not Signed in
+        return NextResponse.json({ error: "Not logged in" });
+    } else {
+        const storedHash = await prisma.hashDay.deleteMany({
+            where: {
+                userId: session.userId,
+            },
+        });
     }
 }
