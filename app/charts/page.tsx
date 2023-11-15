@@ -3,17 +3,21 @@ import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
 import MiningChart from "./MiningChart";
+import { Card } from "@nextui-org/react";
+import { authOptions } from "../api/auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
 const getUser = async (id: string) => {
-    const profile = await prisma.user.findUnique({ where: { id: id } });
+    const profile = await prisma.user.findUnique({
+        where: { id: id },
+
+        include: { HashDay: { orderBy: { date: "asc" } } },
+    });
     return profile;
 };
-export default async function Home() {
-    console.log("Reloading page...");
+export default async function Charts() {
     const session: any = await getServerSession(authOptions);
     if (!session || !session.userId) {
         return (
@@ -22,96 +26,18 @@ export default async function Home() {
             </div>
         );
     }
-    const profile = await getUser(session.userId);
-    const luxor_key = profile?.luxorApiKey ? profile?.luxorApiKey : null;
-    // console.log('luxor_key', luxor_key)
-    if (!luxor_key) {
-        return <h1>Go to the settings and set your Luxor API key</h1>;
-    }
-
-    const luxor_account = profile?.luxorAccount ? profile?.luxorAccount : null;
-    if (!luxor_account) {
+    const user = await getUser(session.userId);
+    if (user?.HashDay.length == 0) {
         return (
-            <div>
-                <h1>Go to the settings and select your Luxor Account</h1>
-            </div>
+            <Card className="max-w-[500px] m-auto mh-5 p-5">
+                <h1>You must pull in some hash data on the settings page</h1>
+            </Card>
         );
     }
-    //Query for our historical hashrate mining data.
-    const getHashrateScoreHistory = async () => {
-        const query = gql`
-            query getHashrateScoreHistory($mpn: MiningProfileName!, $uname: String!, $first: Int) {
-                getHashrateScoreHistory(mpn: $mpn, uname: $uname, first: $first, orderBy: DATE_ASC) {
-                    nodes {
-                        date
-                        efficiency
-                        hashrate
-                        revenue
-                        uptimePercentage
-                        uptimeTotalMinutes
-                        uptimeTotalMachines
-                    }
-                }
-            }
-        `;
-        const variables = {
-            mpn: "BTC",
-            uname: "onesandzeros",
-            first: 1000,
-        };
-
-        const { data } = await graphQlClient(luxor_key).query({ query, variables });
-        return data;
-    };
-
-    // const hash = await subaccountsHashrateHistory();
-    // const summary = await getMiningSummary();
-    const score = await getHashrateScoreHistory();
-
-    //sort the data in date order ascending
-    let totalRevenue = 0;
-    const totalHashArray = [...score.getHashrateScoreHistory.nodes];
-    totalHashArray.sort((one: any, two: any) => {
-        return new Date(one.date) > new Date(two.date) ? 1 : -1;
-    });
-
-    //find the first date of the mining data
-    const startDateISO = new Date(totalHashArray[0].date).toISOString();
-    console.log("First Date = ", startDateISO);
-
-    let config = {
-        method: "get",
-        maxBodyLength: Infinity,
-        url:
-            "https://rest.coinapi.io/v1/exchangerate/BTC/NZD/history?period_id=1DAY&time_start=" +
-            startDateISO +
-            "&limit=" +
-            totalHashArray.length,
-        headers: {
-            Accept: "application/json",
-            "X-CoinAPI-Key": "46CB7B06-7BFF-4D44-BD58-7E181FD37D63",
-        },
-    };
-    //get historical BTC / NZD Prices
+    //Accumulate the chart data.
     const coinPrice: any[] = [];
     coinPrice.push(["date", "BTC/NZD"]);
-    const allPrices: any[] = [];
 
-    const axios = require("axios");
-    await axios(config)
-        .then((response: any) => {
-            // console.log(JSON.stringify(response.data));
-            response.data.forEach((item: any) => {
-                coinPrice.push([new Date(item.time_period_start), (item.rate_high + item.rate_low) / 2]);
-                allPrices.push({ date: new Date(item.time_period_start), price: (item.rate_high + item.rate_low) / 2 });
-            });
-        })
-        .catch((error: any) => {
-            console.log("ERROR", error.message);
-            console.log("ERROR", error.response.data);
-        });
-
-    //Accumulate the chart data.
     const hashRevenue = [];
     hashRevenue.push(["date", "Mined BTC", "BTC value in $", "Electricity cost", "Profit"]);
     const hashUptime = [];
@@ -124,8 +50,7 @@ export default async function Home() {
     let totalElec = 0;
     let totalElecCost = 0;
     let totalProfit = 0;
-    totalHashArray.forEach((item: any) => {
-        console.log(item);
+    user?.HashDay.forEach((item: any) => {
         totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
@@ -133,26 +58,18 @@ export default async function Home() {
         totalElecCost += elect;
         let bitcoinValue = 0;
 
-        let finder = null;
-        try {
-            bitcoinValue =
-                allPrices.find((findit) => {
-                    finder = { ...findit };
-                    // console.log(new Date(item.date).toISOString(), findit.date.toISOString());
-                    return new Date(item.date).toISOString() == findit.date.toISOString();
-                }).price * parseFloat(item.revenue);
-        } catch (error) {
-            // console.log(error, "looking for", finder)
-        }
+        bitcoinValue = item.averagePrice * parseFloat(item.revenue);
         const profit = bitcoinValue - elect;
         totalProfit = totalProfit + profit;
         totalBitcoinValue += bitcoinValue;
         hashRevenue.push([new Date(item.date), parseFloat(item.revenue), bitcoinValue, elect, profit]);
+
         hashUptime.push([new Date(item.date), parseFloat(item.uptimePercentage)]);
         relativeMining.push([
             new Date(item.date),
             (1 / parseFloat(item.uptimePercentage)) * parseFloat(item.revenue) * 100,
         ]);
+        coinPrice.push([new Date(item.time_period_start), item.averagePrice]);
     });
 
     // console.log(revenueCume)

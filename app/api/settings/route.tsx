@@ -4,11 +4,11 @@ import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "../auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
-const subaccounts = async (luxor_key) => {
+const subaccounts = async (luxor_key: string) => {
     const query = gql`
         query getSubaccounts {
             users(first: 10) {
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
             },
         });
         let subAcc = [];
-        if (result.luxorApiKey) {
+        if (result?.luxorApiKey) {
             const accounts = await subaccounts(result.luxorApiKey);
             subAcc = accounts.users.nodes.map((user: any, index: number) => user.username);
         }
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     }
 }
 export async function POST(request: Request) {
-    const { luxorApiKey, minerWatts, electricityPriceUsd, luxorAccount } = await request.json();
+    const { luxorApiKey, minerWatts, electricityPriceNzd, luxorAccount } = await request.json();
 
     const session = await getServerSession(authOptions);
     const userId = session ? session.userId : null; //find userID
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
             luxorApiKey: luxorApiKey,
             luxorAccount: luxorAccount,
             minerWatts: minerWatts ? parseInt(minerWatts) : undefined,
-            electricityPriceUsd: electricityPriceUsd ? parseFloat(electricityPriceUsd) : undefined,
+            electricityPriceNzd: electricityPriceNzd ? parseFloat(electricityPriceNzd) : undefined,
         },
     });
 

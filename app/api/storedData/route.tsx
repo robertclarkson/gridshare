@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "../auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
@@ -17,8 +17,8 @@ export async function GET(request: Request) {
                 id: session.userId,
             },
         });
-        if (user.luxorApiKey && user.luxorAccount) {
-            const storedHash = await prisma.HashDay.findMany({
+        if (user?.luxorApiKey && user.luxorAccount) {
+            const storedHash = await prisma.hashDay.findMany({
                 where: {
                     userId: session.userId,
                 },
@@ -43,5 +43,6 @@ export async function POST(request: Request) {
                 userId: session.userId,
             },
         });
+        return NextResponse.json({ result: "success" });
     }
 }

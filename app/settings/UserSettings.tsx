@@ -51,7 +51,8 @@ function UserPanel() {
     if (error) return <div>An error has occurred: {error.message}</div>;
     if (isLoading) return <Spinner />;
     if (!data) return <h1>No data returned for this user</h1>;
-
+    const disabled = !data.result.luxorApiKey || !data.result.luxorAccount;
+    console.log("disabled", disabled);
     return (
         <div className="flex flex-col space-y-6">
             <div>
@@ -92,12 +93,12 @@ function UserPanel() {
             </div>
             <Spacer />
             <div>
-                <label>Electricity cost / KWh in USD</label>
+                <label>Electricity cost / KWh in NZD</label>
                 <div>
                     <FieldEditor
                         id={data.result.id}
-                        field="electricityPriceUsd"
-                        value={data.result.electricityPriceUsd}
+                        field="electricityPriceNzd"
+                        value={data.result.electricityPriceNzd}
                         mutation={mutation}
                     />
                 </div>
@@ -108,25 +109,35 @@ function UserPanel() {
                 <div>
                     <p>Hash Records #{data.result.HashDay.length}</p>
                     <Button
+                        disabled={disabled}
                         onPress={() => {
                             fetch("/api/importStats", {
                                 method: "GET",
-                            }).then((response) => {
-                                queryClient.invalidateQueries({ queryKey: ["user"] });
-                                alert("Done");
-                            });
+                            })
+                                .then((response) => {
+                                    queryClient.invalidateQueries({ queryKey: ["user"] });
+                                    alert("Done");
+                                })
+                                .catch((error) => {
+                                    alert(error.message);
+                                });
                         }}
                     >
                         Import Hash Data
                     </Button>
                     <Button
+                        disabled={disabled}
                         onPress={() => {
                             fetch("/api/storedData", {
                                 method: "POST",
-                            }).then((response) => {
-                                queryClient.invalidateQueries({ queryKey: ["user"] });
-                                alert("Done");
-                            });
+                            })
+                                .then((response) => {
+                                    queryClient.invalidateQueries({ queryKey: ["user"] });
+                                    alert("Done");
+                                })
+                                .catch((error) => {
+                                    alert(error.message);
+                                });
                         }}
                     >
                         Clear All Hash Data

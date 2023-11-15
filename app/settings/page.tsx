@@ -1,9 +1,9 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Card } from "@nextui-org/card";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import UserSettings from "./UserSettings";
+import { authOptions } from "../api/auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ const getProfile = async (id: string) => {
     return profile;
 };
 
-export default async function Profile() {
+export default async function Settings() {
     // Get user session token
     const session: any = await getServerSession(authOptions);
     if (!session || !session.userId) {

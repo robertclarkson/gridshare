@@ -19,8 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <div className="h-screen">
                         <div className="px-6 flex-grow">
                             {children}
-                            <div>
-                                <a href="https://coingecko.com">Data provided by CoinGecko</a>
+                            <div className="m-auto mv-5 text-center">
+                                <p>
+                                    <a href="https://onesandzeros.nz">Built by Ones and Zeros</a>
+                                    <br />
+                                    <small>
+                                        <a href="https://coingecko.com">Price Data provided by CoinGecko</a>
+                                    </small>
+                                </p>
                             </div>
                         </div>
                     </div>

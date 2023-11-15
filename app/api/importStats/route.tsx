@@ -4,7 +4,7 @@ import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "../auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
 
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
                 id: session.userId,
             },
         });
-        if (user.luxorApiKey && user.luxorAccount) {
+        if (user?.luxorApiKey && user?.luxorAccount) {
             const storedHash = await prisma.hashDay.findMany({
                 where: {
                     userId: session.userId,
@@ -54,7 +54,6 @@ export async function GET(request: Request) {
                     date: "desc",
                 },
             });
-            console.log("found records: ", storedHash.length);
 
             const hashHistory = await getHashrateScoreHistory(user.luxorApiKey, user.luxorAccount);
             const totalHashArray = [...hashHistory.getHashrateScoreHistory.nodes];
@@ -78,16 +77,16 @@ export async function GET(request: Request) {
                 });
             };
 
-            console.log(
-                "get prices from ",
-                new Date(totalHashArray[0].date).valueOf() / 1000,
-                new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
-            );
+            // console.log(
+            //     "get prices from ",
+            //     new Date(totalHashArray[0].date).valueOf() / 1000,
+            //     new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
+            // );
             const rates = await nzdBTC(
                 new Date(totalHashArray[0].date).valueOf() / 1000,
                 new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
             );
-            console.log(rates);
+            // console.log(rates);
 
             totalHashArray.forEach((hash: any) => {
                 // const hash = totalHashArray[0];
@@ -95,8 +94,8 @@ export async function GET(request: Request) {
                     return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
                 });
                 if (!foundHash) {
-                    console.log("foundHash date", new Date(hash.date).toDateString());
-                    const rate = rates.find((item) => {
+                    // console.log("foundHash date", new Date(hash.date).toDateString());
+                    const rate = rates.find((item: number[]) => {
                         return item[0] == new Date(hash.date).valueOf();
                     });
                     prisma.hashDay
@@ -119,11 +118,11 @@ export async function GET(request: Request) {
                         });
                 } else {
                     if (foundHash.averagePrice == 0) {
-                        console.log("foundHash date", foundHash.date.toString().substr(0, 10));
-                        const rate = rates.find((item) => {
+                        // console.log("foundHash date", foundHash.date.toString().substr(0, 10));
+                        const rate = rates.find((item: number[]) => {
                             return item[0] == new Date(foundHash.date).valueOf();
                         });
-                        console.log("updating price id", foundHash.id, " with this dates price", rate);
+                        // console.log("updating price id", foundHash.id, " with this dates price", rate);
                         if (rate) {
                             prisma.hashDay.update({
                                 where: {
@@ -134,7 +133,7 @@ export async function GET(request: Request) {
                                 },
                             });
                         } else {
-                            console.log("todays price cant be found");
+                            // console.log("todays price cant be found");
                         }
                     }
                 }
