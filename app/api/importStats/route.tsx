@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 
             const hashHistory = await getHashrateScoreHistory(user.luxorApiKey, user.luxorAccount);
             const totalHashArray = [...hashHistory.getHashrateScoreHistory.nodes];
-
+            console.log(totalHashArray);
             const nzdBTC = async (from: number, to: number) => {
                 return await fetch(
                     "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=nzd&from=" +
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
                 ).then((result) => {
                     return result.json().then((json) => {
                         if (json.prices) {
-                            console.log("json", json);
+                            // console.log("json", json);
                             return json.prices;
                         } else {
                             console.log("No market data", json);
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
             );
             // console.log(rates);
 
-            totalHashArray.forEach((hash: any) => {
+            totalHashArray.forEach(async (hash: any) => {
                 // const hash = totalHashArray[0];
                 const foundHash = storedHash.find((dbHash: any) => {
                     return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
@@ -98,7 +98,7 @@ export async function GET(request: Request) {
                     const rate = rates.find((item: number[]) => {
                         return item[0] == new Date(hash.date).valueOf();
                     });
-                    prisma.hashDay
+                    await prisma.hashDay
                         .create({
                             data: {
                                 date: hash.date,
@@ -124,7 +124,7 @@ export async function GET(request: Request) {
                         });
                         // console.log("updating price id", foundHash.id, " with this dates price", rate);
                         if (rate) {
-                            prisma.hashDay.update({
+                            await prisma.hashDay.update({
                                 where: {
                                     id: foundHash.id,
                                 },
