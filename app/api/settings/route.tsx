@@ -34,7 +34,7 @@ export async function GET(request: Request) {
                 id: session.userId,
             },
             include: {
-                HashDay: true,
+                hashing: true,
             },
         });
         let subAcc = [];

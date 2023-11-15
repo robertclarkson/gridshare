@@ -11,7 +11,7 @@ const getUser = async (id: string) => {
     const user = await prisma.user.findUnique({
         where: { id: id },
         include: {
-            HashDay: {
+            hashing: {
                 orderBy: {
                     date: "asc",
                 },
@@ -30,7 +30,7 @@ export default async function Home() {
         );
     }
     const user = await getUser(session.userId);
-    if (user?.HashDay.length == 0) {
+    if (user?.hashing.length == 0) {
         return (
             <Card className="max-w-[500px] m-auto mh-5 p-5">
                 <h1>You must pull in some hash data on the settings page</h1>
@@ -50,8 +50,7 @@ export default async function Home() {
     let totalElec = 0;
     let totalElecCost = 0;
     let totalProfit = 0;
-    user?.HashDay.forEach((item: any) => {
-        console.log(item.revenue);
+    user?.hashing.forEach((item: any) => {
         totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
@@ -68,6 +67,7 @@ export default async function Home() {
     return (
         <main>
             <Card className="max-w-[500px] m-auto mh-5 p-5">
+                <h1 className="text-2xl my-5">Mining Summary</h1>
                 <table cellPadding={5}>
                     <tbody>
                         <tr>
@@ -103,35 +103,8 @@ export default async function Home() {
                     </tbody>
                 </table>
                 <p>&nbsp;</p>
-                <p>Most recent reading: {user?.HashDay[user?.HashDay.length - 1].date.toDateString()}</p>
+                <p>Most recent reading: {user?.hashing[user?.hashing.length - 1].date.toDateString()}</p>
             </Card>
-            {/* 
-            <table className="">
-                <tbody>
-                    <tr>
-                        <th className="border">date</th>
-                        <th className="border">efficiency</th>
-                        <th className="border">hashrate</th>
-                        <th className="border">revenue</th>
-                        <th className="border">uptimePercentage</th>
-                        <th className="border">uptimeTotalMinutes</th>
-                        <th className="border">uptimeTotalMachines</th>
-                    </tr>
-                    {score.getHashrateScoreHistory.nodes.map((score: any, index: number) => {
-                        return (
-                            <tr key={index}>
-                                <td className="border">{score.date}</td>
-                                <td className="border">{score.efficiency}</td>
-                                <td className="border">{score.hashrate}</td>
-                                <td className="border">{score.revenue}</td>
-                                <td className="border">{score.uptimePercentage}</td>
-                                <td className="border">{score.uptimeTotalMinutes}</td>
-                                <td className="border">{score.uptimeTotalMachines}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table> */}
         </main>
     );
 }

@@ -16,7 +16,7 @@ export default function UserSettings() {
 }
 
 interface UsersApiReturnData {
-    result: User;
+    result: any;
 }
 
 function UserPanel() {
@@ -107,7 +107,7 @@ function UserPanel() {
             <div>
                 <label>Actions</label>
                 <div>
-                    <p>Hash Records #{data.result.HashDay.length}</p>
+                    <p>Hash Records #{data.result.hashing.length}</p>
                     <Button
                         disabled={disabled}
                         onPress={() => {

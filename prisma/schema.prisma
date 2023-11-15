@@ -52,7 +52,8 @@ model User {
 
     accounts Account[]
     sessions Session[]
-    HashDay  HashDay[]
+    hashing  HashDay[]
+    disposals  Disposal[]
 }
 
 model VerificationToken {
@@ -73,6 +74,16 @@ model HashDay {
     uptimeTotalMinutes  Int
     uptimeTotalMachines Int
     averagePrice        Float
+    userId              String
+    user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Disposal {
+    id                  String   @id @default(cuid())
+    date                DateTime
+    amount              Float
+    dollars             Float
     userId              String
     user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

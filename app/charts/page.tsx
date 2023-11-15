@@ -13,7 +13,7 @@ const getUser = async (id: string) => {
     const profile = await prisma.user.findUnique({
         where: { id: id },
 
-        include: { HashDay: { orderBy: { date: "asc" } } },
+        include: { hashing: { orderBy: { date: "asc" } } },
     });
     return profile;
 };
@@ -27,7 +27,7 @@ export default async function Charts() {
         );
     }
     const user = await getUser(session.userId);
-    if (user?.HashDay.length == 0) {
+    if (user?.hashing.length == 0) {
         return (
             <Card className="max-w-[500px] m-auto mh-5 p-5">
                 <h1>You must pull in some hash data on the settings page</h1>
@@ -50,7 +50,7 @@ export default async function Charts() {
     let totalElec = 0;
     let totalElecCost = 0;
     let totalProfit = 0;
-    user?.HashDay.forEach((item: any) => {
+    user?.hashing.forEach((item: any) => {
         totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw

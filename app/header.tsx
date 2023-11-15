@@ -3,6 +3,7 @@ import { Button, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem, User } fr
 import { useSession } from "next-auth/react";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { useEffect, useState } from "react";
+import UserDropdown from "./components/UserDropdown";
 
 export default function Header(props: any) {
     const { data: session, status } = useSession();
@@ -29,6 +30,11 @@ export default function Header(props: any) {
                         Charts
                     </Link>
                 </NavbarItem>
+                <NavbarItem isActive={path == "/rawData"}>
+                    <Link color={path == "/rawData" ? "success" : "foreground"} aria-current="page" href="/rawData">
+                        Raw Data
+                    </Link>
+                </NavbarItem>
                 <NavbarItem isActive={path == "/settings"}>
                     <Link color={path == "/settings" ? "success" : "foreground"} href="/settings">
                         Settings
@@ -36,22 +42,7 @@ export default function Header(props: any) {
                 </NavbarItem>
             </NavbarContent>
             <NavbarContent justify="end">
-                <ThemeSwitcher />
-                {session && (
-                    <>
-                        <User
-                            id="user"
-                            name={session.user?.name}
-                            description={session.user?.email}
-                            avatarProps={{
-                                src: session.user?.image ? session.user?.image : undefined,
-                            }}
-                        />
-                        <NavbarItem>
-                            <Link href="/api/auth/signout">Sign Out</Link>
-                        </NavbarItem>
-                    </>
-                )}
+                {session && <UserDropdown session={session} />}
                 {!session && (
                     <NavbarItem>
                         <Button as={Link} color="primary" href="/api/auth/signin" variant="flat">
