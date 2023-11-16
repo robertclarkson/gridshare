@@ -35,6 +35,11 @@ export default function Header(props: any) {
                         Raw Data
                     </Link>
                 </NavbarItem>
+                <NavbarItem isActive={path == "/sales"}>
+                    <Link color={path == "/sales" ? "success" : "foreground"} aria-current="page" href="/sales">
+                        Sales
+                    </Link>
+                </NavbarItem>
                 <NavbarItem isActive={path == "/settings"}>
                     <Link color={path == "/settings" ? "success" : "foreground"} href="/settings">
                         Settings

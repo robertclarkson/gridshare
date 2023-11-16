@@ -17,6 +17,7 @@
         "@tanstack/react-query": "^5.4.3",
         "@types/google.visualization": "^0.0.71",
         "axios": "^1.5.1",
+        "dayjs": "^1.11.10",
         "framer-motion": "^10.16.5",
         "isomorphic-fetch": "^3.0.0",
         "next": "^13.5.6",

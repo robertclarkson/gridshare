@@ -89,61 +89,62 @@ export async function GET(request: Request) {
             // console.log(rates);
             let added = 0;
             let updated = 0;
-
-            await Promise.all(
-                totalHashArray.map(async (hash: any) => {
-                    // const hash = totalHashArray[0];
-                    const foundHash = storedHash.find((dbHash: any) => {
-                        return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
+            const createManyData: any = [];
+            totalHashArray.map(async (hash: any) => {
+                // const hash = totalHashArray[0];
+                const foundHash = storedHash.find((dbHash: any) => {
+                    return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
+                });
+                if (!foundHash) {
+                    // console.log("foundHash date", new Date(hash.date).toDateString());
+                    const rate = rates.find((item: number[]) => {
+                        return item[0] == new Date(hash.date).valueOf();
                     });
-                    if (!foundHash) {
-                        // console.log("foundHash date", new Date(hash.date).toDateString());
+                    createManyData.push({
+                        date: hash.date,
+                        efficiency: parseFloat(hash.efficiency),
+                        hashrate: parseFloat(hash.hashrate),
+                        revenue: parseFloat(hash.revenue),
+                        uptimePercentage: parseFloat(hash.uptimePercentage),
+                        uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
+                        uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
+                        averagePrice: parseFloat(rate ? rate[1] : 0),
+                        userId: user.id,
+                    });
+                    added++;
+                } else {
+                    if (foundHash.averagePrice == 0) {
+                        // console.log("foundHash date", foundHash.date.toString().substr(0, 10));
                         const rate = rates.find((item: number[]) => {
-                            return item[0] == new Date(hash.date).valueOf();
+                            return item[0] == new Date(foundHash.date).valueOf();
                         });
-                        await prisma.hashDay
-                            .create({
-                                data: {
-                                    date: hash.date,
-                                    efficiency: parseFloat(hash.efficiency),
-                                    hashrate: parseFloat(hash.hashrate),
-                                    revenue: parseFloat(hash.revenue),
-                                    uptimePercentage: parseFloat(hash.uptimePercentage),
-                                    uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
-                                    uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
-                                    averagePrice: parseFloat(rate ? rate[1] : 0),
-                                    userId: user.id,
+                        // console.log("updating price id", foundHash.id, " with this dates price", rate);
+                        if (rate) {
+                            await prisma.hashDay.update({
+                                where: {
+                                    id: foundHash.id,
                                 },
-                            })
-                            .catch((error: any) => {
-                                console.log("ERROR", error.message);
-                                console.log("ERROR", error.response.data);
+                                data: {
+                                    averagePrice: rate[1],
+                                },
                             });
-                        added++;
-                    } else {
-                        if (foundHash.averagePrice == 0) {
-                            // console.log("foundHash date", foundHash.date.toString().substr(0, 10));
-                            const rate = rates.find((item: number[]) => {
-                                return item[0] == new Date(foundHash.date).valueOf();
-                            });
-                            // console.log("updating price id", foundHash.id, " with this dates price", rate);
-                            if (rate) {
-                                await prisma.hashDay.update({
-                                    where: {
-                                        id: foundHash.id,
-                                    },
-                                    data: {
-                                        averagePrice: rate[1],
-                                    },
-                                });
-                            } else {
-                                // console.log("todays price cant be found");
-                            }
+                        } else {
+                            // console.log("todays price cant be found");
                         }
-                        updated++;
                     }
+                    updated++;
+                }
+            });
+
+            await prisma.hashDay
+                .createMany({
+                    data: createManyData,
                 })
-            );
+                .catch((error: any) => {
+                    console.log("ERROR", error.message);
+                    console.log("ERROR", error.response.data);
+                });
+
             console.log("added: ", added, "updated: ", updated);
         }
 

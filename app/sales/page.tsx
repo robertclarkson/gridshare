@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { Card } from "@nextui-org/react";
 import { authOptions } from "../api/auth/[...nextauth]/authOptions";
+import Sales from "./Sales";
 
 const prisma = new PrismaClient();
 
@@ -38,5 +39,16 @@ export default async function RawData() {
         );
     }
 
-    return <h1>Sales</h1>;
+    return (
+        <div className="bg h-screen">
+            <div>
+                <h1 className="text-2xl mb-4 text-center">Sales</h1>
+                <div className="flex w-full justify-center items-center">
+                    <Card className="w-1/2 max-w-[500px] m-5 p-5">
+                        <Sales />
+                    </Card>
+                </div>
+            </div>
+        </div>
+    );
 }
