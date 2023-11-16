@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import FieldEditor from "./FieldEditor";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
@@ -20,12 +21,16 @@ interface UsersApiReturnData {
 }
 
 function UserPanel() {
+    const [saving, setSaving] = useState(false);
+    const [importing, setImporting] = useState(false);
     const { isLoading, error, data } = useQuery<UsersApiReturnData, AxiosError, UsersApiReturnData>({
         queryKey: ["user"],
         queryFn: () => fetch("/api/settings").then((res) => res.json()),
     });
     const mutation = useMutation<Response, AxiosError, any, any>({
         mutationFn: (updateUser) => {
+            setSaving(true);
+
             return fetch("/api/settings", { method: "POST", body: JSON.stringify(updateUser) }).then(
                 async (response) => {
                     if (!response.ok) {
@@ -40,12 +45,14 @@ function UserPanel() {
         onError: (error, variables, context) => {
             // An error happened!
             console.log(`rolling back optimistic update with id ${context.id}`);
+            setSaving(false);
         },
         onSuccess: (data, variables) => {
             //@todo get the user data refreshing when the data has changed
             console.log("mutation success", data, variables);
             // queryClient.setQueryData(["users", { id: variables.id }], data);
             queryClient.invalidateQueries({ queryKey: ["user"] });
+            setSaving(false);
         },
     });
     if (error) return <div>An error has occurred: {error.message}</div>;
@@ -55,6 +62,7 @@ function UserPanel() {
     console.log("disabled", disabled);
     return (
         <div className="flex flex-col space-y-6">
+            {saving && <Spinner />}
             <div>
                 <label>Luxor API key</label>
                 <div>
@@ -108,18 +116,22 @@ function UserPanel() {
                 <label>Actions</label>
                 <div>
                     <p>Hash Records #{data.result.hashing.length}</p>
+                    {importing && <Spinner />}
                     <Button
                         disabled={disabled}
                         onPress={() => {
+                            setImporting(true);
                             fetch("/api/importStats", {
                                 method: "GET",
                             })
                                 .then((response) => {
                                     queryClient.invalidateQueries({ queryKey: ["user"] });
                                     alert("Done");
+                                    setImporting(false);
                                 })
                                 .catch((error) => {
                                     alert(error.message);
+                                    setImporting(false);
                                 });
                         }}
                     >

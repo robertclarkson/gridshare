@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 
             const hashHistory = await getHashrateScoreHistory(user.luxorApiKey, user.luxorAccount);
             const totalHashArray = [...hashHistory.getHashrateScoreHistory.nodes];
-            console.log(totalHashArray);
+            console.log("found hash days: ", totalHashArray.length);
             const nzdBTC = async (from: number, to: number) => {
                 return await fetch(
                     "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=nzd&from=" +
@@ -87,57 +87,64 @@ export async function GET(request: Request) {
                 new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
             );
             // console.log(rates);
+            let added = 0;
+            let updated = 0;
 
-            totalHashArray.forEach(async (hash: any) => {
-                // const hash = totalHashArray[0];
-                const foundHash = storedHash.find((dbHash: any) => {
-                    return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
-                });
-                if (!foundHash) {
-                    // console.log("foundHash date", new Date(hash.date).toDateString());
-                    const rate = rates.find((item: number[]) => {
-                        return item[0] == new Date(hash.date).valueOf();
+            await Promise.all(
+                totalHashArray.map(async (hash: any) => {
+                    // const hash = totalHashArray[0];
+                    const foundHash = storedHash.find((dbHash: any) => {
+                        return new Date(hash.date).toISOString() == new Date(dbHash.date).toISOString();
                     });
-                    await prisma.hashDay
-                        .create({
-                            data: {
-                                date: hash.date,
-                                efficiency: parseFloat(hash.efficiency),
-                                hashrate: parseFloat(hash.hashrate),
-                                revenue: parseFloat(hash.revenue),
-                                uptimePercentage: parseFloat(hash.uptimePercentage),
-                                uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
-                                uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
-                                averagePrice: parseFloat(rate ? rate[1] : 0),
-                                userId: user.id,
-                            },
-                        })
-                        .catch((error: any) => {
-                            console.log("ERROR", error.message);
-                            console.log("ERROR", error.response.data);
-                        });
-                } else {
-                    if (foundHash.averagePrice == 0) {
-                        // console.log("foundHash date", foundHash.date.toString().substr(0, 10));
+                    if (!foundHash) {
+                        // console.log("foundHash date", new Date(hash.date).toDateString());
                         const rate = rates.find((item: number[]) => {
-                            return item[0] == new Date(foundHash.date).valueOf();
+                            return item[0] == new Date(hash.date).valueOf();
                         });
-                        // console.log("updating price id", foundHash.id, " with this dates price", rate);
-                        if (rate) {
-                            await prisma.hashDay.update({
-                                where: {
-                                    id: foundHash.id,
-                                },
+                        await prisma.hashDay
+                            .create({
                                 data: {
-                                    averagePrice: rate[1],
+                                    date: hash.date,
+                                    efficiency: parseFloat(hash.efficiency),
+                                    hashrate: parseFloat(hash.hashrate),
+                                    revenue: parseFloat(hash.revenue),
+                                    uptimePercentage: parseFloat(hash.uptimePercentage),
+                                    uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
+                                    uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
+                                    averagePrice: parseFloat(rate ? rate[1] : 0),
+                                    userId: user.id,
                                 },
+                            })
+                            .catch((error: any) => {
+                                console.log("ERROR", error.message);
+                                console.log("ERROR", error.response.data);
                             });
-                        } else {
-                            // console.log("todays price cant be found");
+                        added++;
+                    } else {
+                        if (foundHash.averagePrice == 0) {
+                            // console.log("foundHash date", foundHash.date.toString().substr(0, 10));
+                            const rate = rates.find((item: number[]) => {
+                                return item[0] == new Date(foundHash.date).valueOf();
+                            });
+                            // console.log("updating price id", foundHash.id, " with this dates price", rate);
+                            if (rate) {
+                                await prisma.hashDay.update({
+                                    where: {
+                                        id: foundHash.id,
+                                    },
+                                    data: {
+                                        averagePrice: rate[1],
+                                    },
+                                });
+                            } else {
+                                // console.log("todays price cant be found");
+                            }
                         }
+                        updated++;
                     }
-                }
-            });
+                })
+            );
+            console.log("added: ", added, "updated: ", updated);
         }
 
         return NextResponse.json({ result: "success" });
