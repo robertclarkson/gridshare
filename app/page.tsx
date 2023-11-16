@@ -16,6 +16,7 @@ const getUser = async (id: string) => {
                     date: "asc",
                 },
             },
+            disposals: true,
         },
     });
     return user;
@@ -63,6 +64,9 @@ export default async function Home() {
         totalProfit = totalProfit + profit;
         totalBitcoinValue += bitcoinValue;
     });
+
+    let totalSales = 0;
+    user?.disposals.forEach((sale) => {});
 
     return (
         <main>

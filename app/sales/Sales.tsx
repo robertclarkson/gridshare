@@ -17,7 +17,7 @@ export default function UserSettings() {
 }
 
 interface UsersApiReturnData {
-    result: User;
+    result: [any];
 }
 
 function UserPanel() {
@@ -183,6 +183,16 @@ function UserPanel() {
                                         }}
                                     >
                                         Edit
+                                    </Button>
+                                    <Button
+                                        onPress={() => {
+                                            mutation.mutate({
+                                                id: saleId,
+                                                action: "delete",
+                                            });
+                                        }}
+                                    >
+                                        Delete
                                     </Button>
                                 </td>
                             </tr>
