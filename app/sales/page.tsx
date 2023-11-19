@@ -44,7 +44,7 @@ export default async function RawData() {
             <div>
                 <h1 className="text-2xl mb-4 text-center">Sales</h1>
                 <div className="flex w-full justify-center items-center">
-                    <Card className="w-1/2 max-w-[500px] m-5 p-5">
+                    <Card className="w-1/2 w-[1024px] m-5 p-5">
                         <Sales />
                     </Card>
                 </div>

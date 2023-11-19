@@ -51,6 +51,7 @@ export default async function Home() {
     let totalElec = 0;
     let totalElecCost = 0;
     let totalProfit = 0;
+    let latestBTCPrice = 0;
     user?.hashing.forEach((item: any) => {
         totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
         totalBitcoin += parseFloat(item.revenue);
@@ -63,11 +64,19 @@ export default async function Home() {
         const profit = bitcoinValue - elect;
         totalProfit = totalProfit + profit;
         totalBitcoinValue += bitcoinValue;
+        latestBTCPrice = item.averagePrice;
     });
 
-    let totalSales = 0;
-    user?.disposals.forEach((sale) => {});
+    let totalSalesBTC = 0;
+    let totalSalesNZD = 0;
+    user?.disposals.forEach((sale) => {
+        totalSalesBTC += sale.amount;
+        totalSalesNZD += sale.dollars;
+    });
 
+    const btcRemaining = totalBitcoin - totalSalesBTC;
+    const remBtcValue = btcRemaining > 0 ? btcRemaining * latestBTCPrice : 0;
+    const profit = remBtcValue + totalSalesNZD - totalElecCost;
     return (
         <main>
             <Card className="max-w-[500px] m-auto mh-5 p-5">
@@ -105,6 +114,28 @@ export default async function Home() {
                             <td className="border">${parseFloat(totalProfit.toFixed(2)).toLocaleString()}</td>
                         </tr>
                     </tbody>
+                </table>
+                <table cellPadding={5} className="my-5">
+                    <tr>
+                        <th className="border">Bitcoin Sold</th>
+                        <td className="border">{totalSalesBTC} BTC</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Bitcoin Remaining</th>
+                        <td className="border">{btcRemaining.toFixed(8)} BTC</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Total Income</th>
+                        <td className="border">${totalSalesNZD.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Remaining BTC Value</th>
+                        <td className="border">${remBtcValue.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <th className="border">Actual Profit</th>
+                        <td className="border">${profit.toLocaleString()}</td>
+                    </tr>
                 </table>
                 <p>&nbsp;</p>
                 <p>Most recent reading: {user?.hashing[user?.hashing.length - 1].date.toDateString()}</p>

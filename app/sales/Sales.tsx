@@ -71,7 +71,7 @@ function UserPanel() {
     if (isLoading) return <Spinner />;
     if (!data) return <h1>No data returned for this user</h1>;
     return (
-        <main className="w-full">
+        <main className="">
             <Button
                 style={{ float: "right" }}
                 color="primary"
@@ -157,49 +157,54 @@ function UserPanel() {
                     </ModalContent>
                 </Modal>
             </>
-
-            <table cellPadding="3" cellSpacing="3" className="">
-                <tbody>
-                    <tr>
-                        <th className="border">Date</th>
-                        <th className="border">amount</th>
-                        <th className="border">dollars</th>
-                        <th className="border">actions</th>
-                    </tr>
-                    {data?.map((sale: any, index: number) => {
-                        return (
-                            <tr key={index}>
-                                <td className="border">{sale.date}</td>
-                                <td className="border">{sale.amount}</td>
-                                <td className="border">{sale.dollars}</td>
-                                <td className="border">
-                                    <Button
-                                        onPress={() => {
-                                            setSaleId(sale.id);
-                                            setAmount(sale.amount);
-                                            setDollars(sale.dollars);
-                                            setDate(dayjs(sale.date).format("YYYY-MM-DD"));
-                                            onOpen();
-                                        }}
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        onPress={() => {
-                                            mutation.mutate({
-                                                id: saleId,
-                                                action: "delete",
-                                            });
-                                        }}
-                                    >
-                                        Delete
-                                    </Button>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+            {data.length == 0 ? (
+                <p>No sales data entered yet. Press "create new".</p>
+            ) : (
+                <table cellPadding="3" cellSpacing="3" className="w-full">
+                    <tbody>
+                        <tr>
+                            <th className="border">Date</th>
+                            <th className="border">Amount</th>
+                            <th className="border">Dollars</th>
+                            <th className="border">Rate</th>
+                            <th className="border">actions</th>
+                        </tr>
+                        {data?.map((sale: any, index: number) => {
+                            return (
+                                <tr key={index}>
+                                    <td className="border">{dayjs(sale.date).format("DD MMM YYYY")}</td>
+                                    <td className="border">{sale.amount.toFixed(8)}</td>
+                                    <td className="border">${sale.dollars.toLocaleString()}</td>
+                                    <td className="border">@ ${((sale.dollars * 1) / sale.amount).toLocaleString()}</td>
+                                    <td className="border">
+                                        <Button
+                                            onPress={() => {
+                                                setSaleId(sale.id);
+                                                setAmount(sale.amount);
+                                                setDollars(sale.dollars);
+                                                setDate(dayjs(sale.date).format("YYYY-MM-DD"));
+                                                onOpen();
+                                            }}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            onPress={() => {
+                                                mutation.mutate({
+                                                    id: sale.id,
+                                                    action: "delete",
+                                                });
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            )}
         </main>
     );
 }

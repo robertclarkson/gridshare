@@ -33,23 +33,32 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Not logged in" });
     } else {
         const data: any = await request.json();
+        console.log(data);
+
         if (session.userId) {
             if (data.id) {
                 const exists = await prisma.disposal.findUnique({ where: { id: data.id, userId: session.userId } });
                 if (exists) {
-                    storedSale = await prisma.disposal.update({
-                        where: { id: data.id },
-                        data: {
-                            date: new Date(data.date),
-                            amount: parseFloat(data.amount),
-                            dollars: parseFloat(data.dollars),
-                        },
-                    });
+                    if (data.action && data.action == "delete") {
+                        await prisma.disposal.delete({ where: { id: data.id } });
+                        return NextResponse.json({ result: "success" });
+                    } else {
+                        storedSale = await prisma.disposal.update({
+                            where: { id: data.id },
+                            data: {
+                                date: new Date(data.date),
+                                amount: parseFloat(data.amount),
+                                dollars: parseFloat(data.dollars),
+                            },
+                        });
+                    }
                 } else {
                     NextResponse.json({ error: "Record not found" });
                 }
             } else {
-                console.log(data);
+                if (!data.date || isNaN(data.amount) || isNaN(data.dollars)) {
+                    NextResponse.json({ error: "some sale data is missing. fill out all fields" });
+                }
                 storedSale = await prisma.disposal.create({
                     data: {
                         date: new Date(data.date),
