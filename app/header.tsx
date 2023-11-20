@@ -51,7 +51,7 @@ export default function Header(props: any) {
                 {!session && (
                     <NavbarItem>
                         <Button as={Link} color="primary" href="/api/auth/signin" variant="flat">
-                            Sign Up
+                            Sign In
                         </Button>
                     </NavbarItem>
                 )}

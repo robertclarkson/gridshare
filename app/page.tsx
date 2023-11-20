@@ -46,6 +46,9 @@ export default async function Home() {
     const relativeMining = [];
     relativeMining.push(["date", "Bitcoin per unit uptime"]);
 
+    const watts = user?.minerWatts ? user.minerWatts : 0;
+    const elec = user?.electricityPriceNzd ? user.electricityPriceNzd : 0;
+
     let totalBitcoin = 0;
     let totalBitcoinValue = 0;
     let totalElec = 0;
@@ -53,10 +56,10 @@ export default async function Home() {
     let totalProfit = 0;
     let latestBTCPrice = 0;
     user?.hashing.forEach((item: any) => {
-        totalElec += ((item.uptimeTotalMinutes / 60) * user.minerWatts) / 1000;
+        totalElec += ((item.uptimeTotalMinutes / 60) * watts) / 1000;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
-        const elect = (((item.uptimeTotalMinutes / 60) * user.minerWatts) / 1000) * user.electricityPriceNzd;
+        const elect = (((item.uptimeTotalMinutes / 60) * watts) / 1000) * elec;
         totalElecCost += elect;
         let bitcoinValue = 0;
 
@@ -85,13 +88,11 @@ export default async function Home() {
                     <tbody>
                         <tr>
                             <th className="border">Miner Avg Wattage</th>
-                            <td className="border">{user?.minerWatts ? user?.minerWatts : "?"} watts</td>
+                            <td className="border">{watts} watts</td>
                         </tr>
                         <tr>
                             <th className="border">Miner $/KWh</th>
-                            <td className="border">
-                                ${user?.electricityPriceNzd ? user?.electricityPriceNzd : "?"} NZD
-                            </td>
+                            <td className="border">${elec} NZD</td>
                         </tr>
                         <tr>
                             <th className="border">Total Bitcoin Mined</th>

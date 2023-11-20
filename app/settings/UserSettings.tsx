@@ -1,11 +1,11 @@
 "use client";
-import { Button, Spacer, Spinner } from "@nextui-org/react";
+import { Button, Link, Spacer, Spinner } from "@nextui-org/react";
 import { User } from "@prisma/client";
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import FieldEditor from "./FieldEditor";
 import { useState } from "react";
-
+import { Divider } from "@nextui-org/react";
 const queryClient = new QueryClient();
 
 export default function UserSettings() {
@@ -22,6 +22,7 @@ interface UsersApiReturnData {
 
 function UserPanel() {
     const [saving, setSaving] = useState(false);
+    const [update, setUpdate] = useState<string | null>();
     const [importing, setImporting] = useState(false);
     const { isLoading, error, data } = useQuery<UsersApiReturnData, AxiosError, UsersApiReturnData>({
         queryKey: ["user"],
@@ -65,6 +66,11 @@ function UserPanel() {
             {saving && <Spinner />}
             <div>
                 <label>Luxor API key</label>
+                <p>
+                    <Link target="_new" className="text-xs" href="https://app.luxor.tech/account/keys">
+                        Generate a read-only key here
+                    </Link>
+                </p>
                 <div>
                     <FieldEditor
                         id={data.result.id}
@@ -74,7 +80,7 @@ function UserPanel() {
                     />
                 </div>
             </div>
-            <Spacer />
+            <Divider />
             <div>
                 <label>Luxor Account</label>
                 <div>
@@ -87,7 +93,7 @@ function UserPanel() {
                     />
                 </div>
             </div>
-            <Spacer />
+            <Divider />
             <div>
                 <label>Miner avg watts</label>
                 <div>
@@ -99,7 +105,7 @@ function UserPanel() {
                     />
                 </div>
             </div>
-            <Spacer />
+            <Divider />
             <div>
                 <label>Electricity cost / KWh in NZD</label>
                 <div>
@@ -111,27 +117,31 @@ function UserPanel() {
                     />
                 </div>
             </div>
-            <Spacer />
+            <Divider />
             <div>
                 <label>Actions</label>
                 <div>
-                    <p>Hash Records #{data.result.hashing.length}</p>
+                    <p>Current Records #{data.result.hashing.length}</p>
+                    {update && <p>{update}</p>}
                     {importing && <Spinner />}
                     <Button
                         disabled={disabled}
                         onPress={() => {
                             setImporting(true);
+                            setUpdate(null);
                             fetch("/api/importStats", {
                                 method: "GET",
                             })
-                                .then((response) => {
+                                .then(async (response: any) => {
                                     queryClient.invalidateQueries({ queryKey: ["user"] });
-                                    alert("Done");
                                     setImporting(false);
+                                    const data = await response.json();
+                                    setUpdate("added: " + data.added + " updated: " + data.updated);
                                 })
                                 .catch((error) => {
                                     alert(error.message);
                                     setImporting(false);
+                                    setUpdate(null);
                                 });
                         }}
                     >
@@ -143,9 +153,10 @@ function UserPanel() {
                             fetch("/api/storedData", {
                                 method: "POST",
                             })
-                                .then((response) => {
+                                .then(async (response) => {
                                     queryClient.invalidateQueries({ queryKey: ["user"] });
-                                    alert("Done");
+                                    const data = await response.json();
+                                    setUpdate("added: " + data.added + " updated: " + data.updated);
                                 })
                                 .catch((error) => {
                                     alert(error.message);
