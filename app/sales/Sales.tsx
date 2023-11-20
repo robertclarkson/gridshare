@@ -84,7 +84,7 @@ function UserPanel() {
                     <ModalContent>
                         {(onClose) => (
                             <>
-                                <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+                                <ModalHeader className="flex flex-col gap-1">Create / Update Sale</ModalHeader>
                                 <ModalBody>
                                     <div>
                                         <div>
