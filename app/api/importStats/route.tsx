@@ -40,6 +40,8 @@ export async function GET(request: Request) {
         // Not Signed in
         return NextResponse.json({ error: "Not logged in" });
     } else {
+        let added = 0;
+        let updated = 0;
         const user = await prisma.user.findUnique({
             where: {
                 id: session.userId,
@@ -87,8 +89,7 @@ export async function GET(request: Request) {
                 new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
             );
             // console.log(rates);
-            let added = 0;
-            let updated = 0;
+
             const createManyData: any = [];
             totalHashArray.map(async (hash: any) => {
                 // const hash = totalHashArray[0];
@@ -131,8 +132,8 @@ export async function GET(request: Request) {
                         } else {
                             // console.log("todays price cant be found");
                         }
+                        updated++;
                     }
-                    updated++;
                 }
             });
 
@@ -148,6 +149,6 @@ export async function GET(request: Request) {
             console.log("added: ", added, "updated: ", updated);
         }
 
-        return NextResponse.json({ result: "success" });
+        return NextResponse.json({ result: "success", added: added, updated: updated });
     }
 }

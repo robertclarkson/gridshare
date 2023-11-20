@@ -16,10 +16,6 @@ export default function UserSettings() {
     );
 }
 
-interface UsersApiReturnData {
-    result: [any];
-}
-
 function UserPanel() {
     const [saving, setSaving] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -30,7 +26,7 @@ function UserPanel() {
     const [amount, setAmount] = useState("");
     const [dollars, setDollars] = useState("");
 
-    const { isLoading, error, data } = useQuery<UsersApiReturnData, AxiosError, UsersApiReturnData>({
+    const { isLoading, error, data } = useQuery<any, AxiosError, any>({
         queryKey: ["sales"],
         queryFn: () => fetch("/api/sales").then((res) => res.json()),
     });
@@ -158,7 +154,7 @@ function UserPanel() {
                 </Modal>
             </>
             {data.length == 0 ? (
-                <p>No sales data entered yet. Press "create new".</p>
+                <p>No sales data entered yet. Press &quot;create new&quot;.</p>
             ) : (
                 <table cellPadding="3" cellSpacing="3" className="w-full">
                     <tbody>

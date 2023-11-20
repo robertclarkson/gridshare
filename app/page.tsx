@@ -2,9 +2,9 @@ import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { Card } from "@nextui-org/react";
 import { authOptions } from "./api/auth/[...nextauth]/authOptions";
-
+import { Card } from "@nextui-org/react";
+import Tooltip from "./components/Tooltip";
 const prisma = new PrismaClient();
 
 const getUser = async (id: string) => {
@@ -53,10 +53,10 @@ export default async function Home() {
     let totalProfit = 0;
     let latestBTCPrice = 0;
     user?.hashing.forEach((item: any) => {
-        totalElec += (item.uptimeTotalMinutes / 60) * 3.3;
+        totalElec += ((item.uptimeTotalMinutes / 60) * user.minerWatts) / 1000;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
-        const elect = (item.uptimeTotalMinutes / 60) * 3.3 * 0.12;
+        const elect = (((item.uptimeTotalMinutes / 60) * user.minerWatts) / 1000) * user.electricityPriceNzd;
         totalElecCost += elect;
         let bitcoinValue = 0;
 
@@ -106,36 +106,51 @@ export default async function Home() {
                             <td className="border">${parseFloat(totalElecCost.toFixed(2)).toLocaleString()}</td>
                         </tr>
                         <tr>
-                            <th className="border">Approx Bitcoin Value</th>
+                            <th className="border">
+                                Bitcoin Value{" "}
+                                <Tooltip
+                                    title="Bitcoin Value"
+                                    content="Bitcoin is valued at the NZD value at the point at which it was mined."
+                                />
+                            </th>
                             <td className="border">${parseFloat(totalBitcoinValue.toFixed(2)).toLocaleString()}</td>
                         </tr>
                         <tr>
-                            <th className="border">Theoretical Profit</th>
+                            <th className="border">
+                                Theoretical Profit
+                                <Tooltip
+                                    title="Theoretical Profit"
+                                    content="This assumes all the bitcoin mined has been instantly sold at the price of bitcoin on the day it was mined."
+                                />
+                            </th>
+
                             <td className="border">${parseFloat(totalProfit.toFixed(2)).toLocaleString()}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table cellPadding={5} className="my-5">
-                    <tr>
-                        <th className="border">Bitcoin Sold</th>
-                        <td className="border">{totalSalesBTC} BTC</td>
-                    </tr>
-                    <tr>
-                        <th className="border">Bitcoin Remaining</th>
-                        <td className="border">{btcRemaining.toFixed(8)} BTC</td>
-                    </tr>
-                    <tr>
-                        <th className="border">Total Income</th>
-                        <td className="border">${totalSalesNZD.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                        <th className="border">Remaining BTC Value</th>
-                        <td className="border">${remBtcValue.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                        <th className="border">Actual Profit</th>
-                        <td className="border">${profit.toLocaleString()}</td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <th className="border">Bitcoin Sold</th>
+                            <td className="border">{totalSalesBTC} BTC</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Bitcoin Remaining</th>
+                            <td className="border">{btcRemaining.toFixed(8)} BTC</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total Income</th>
+                            <td className="border">${totalSalesNZD.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Remaining BTC Value</th>
+                            <td className="border">${remBtcValue.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Actual Profit</th>
+                            <td className="border">${profit.toLocaleString()}</td>
+                        </tr>
+                    </tbody>
                 </table>
                 <p>&nbsp;</p>
                 <p>Most recent reading: {user?.hashing[user?.hashing.length - 1].date.toDateString()}</p>

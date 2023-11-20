@@ -63,8 +63,8 @@ export async function POST(request: Request) {
         data: {
             luxorApiKey: luxorApiKey,
             luxorAccount: luxorAccount,
-            minerWatts: minerWatts ? parseInt(minerWatts) : undefined,
-            electricityPriceNzd: electricityPriceNzd ? parseFloat(electricityPriceNzd) : undefined,
+            ...(minerWatts != null && { minerWatts: parseInt(minerWatts) }),
+            ...(electricityPriceNzd != null && { electricityPriceNzd: parseFloat(electricityPriceNzd) }),
         },
     });
 
