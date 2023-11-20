@@ -82,7 +82,7 @@ export default async function Home() {
     const profit = remBtcValue + totalSalesNZD - totalElecCost;
     return (
         <main>
-            <Card className="max-w-[500px] m-auto mh-5 p-5">
+            <Card className="max-w-[500px] my-10 mx-auto  p-5">
                 <h1 className="text-2xl my-5">Mining Summary</h1>
                 <table cellPadding={5}>
                     <tbody>
