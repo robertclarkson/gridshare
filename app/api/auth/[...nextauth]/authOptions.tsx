@@ -1,8 +1,8 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import EmailProvider from "next-auth/providers/email";
+import GoogleProvider from "next-auth/providers/google";
 const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
@@ -12,10 +12,10 @@ export const authOptions: NextAuthOptions = {
             server: process.env.EMAIL_SERVER,
             from: process.env.EMAIL_FROM,
         }),
-        // GoogleProvider({
-        //     clientId: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID : "",
-        //     clientSecret: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET : "",
-        // }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID : "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET : "",
+        }),
     ],
     session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
     secret: process.env.NEXTAUTH_SECRET,
