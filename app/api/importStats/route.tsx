@@ -34,6 +34,40 @@ const getHashrateScoreHistory = async (luxor_key: string, subaccount: string) =>
     return data;
 };
 
+const fillInMissingDatesAsBlank = async (totalHashArray: any, user: any) => {
+    const firstDate = new Date(totalHashArray[0].date);
+    const lastDate = new Date(totalHashArray[totalHashArray.length - 1].date);
+
+    const existing = await prisma.hashDay.findMany({});
+    console.log(firstDate, lastDate);
+    const dateArray = [];
+    for (let i = firstDate; i <= lastDate; i.setDate(i.getDate() + 1)) {
+        const found = existing.find((item: any) => {
+            // console.log(new Date(item.date).toLocaleDateString(), i.toLocaleDateString());
+            return new Date(item.date).toLocaleDateString() == i.toLocaleDateString();
+        });
+        // console.log("found" + i.toLocaleDateString(), found);
+        if (!found) {
+            var d = new Date();
+            d.setTime(i.getTime() + 60 * 60000);
+            console.log(d.toISOString());
+            dateArray.push({
+                date: new Date(i),
+                efficiency: 0,
+                hashrate: 0,
+                revenue: 0,
+                uptimePercentage: 0,
+                uptimeTotalMinutes: 0,
+                uptimeTotalMachines: 0,
+                averagePrice: 0,
+                userId: user.id,
+            });
+        }
+    }
+    // console.log("dateArray", dateArray);
+    return dateArray;
+};
+
 export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
@@ -59,14 +93,14 @@ export async function GET(request: Request) {
 
             const hashHistory = await getHashrateScoreHistory(user.luxorApiKey, user.luxorAccount);
             const totalHashArray = [...hashHistory.getHashrateScoreHistory.nodes];
-            console.log("found hash days: ", totalHashArray.length);
+            // console.log("found hash days: ", totalHashArray.length);
             const nzdBTC = async (from: number, to: number) => {
                 return await fetch(
                     "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=nzd&from=" +
-                    from +
-                    "&to=" +
-                    to +
-                    "&precision=0"
+                        from +
+                        "&to=" +
+                        to +
+                        "&precision=0"
                 ).then((result) => {
                     return result.json().then((json) => {
                         if (json.prices) {
@@ -101,7 +135,7 @@ export async function GET(request: Request) {
                     const rate = rates.find((item: number[]) => {
                         return item[0] == new Date(hash.date).valueOf();
                     });
-                    console.log(hash);
+                    // console.log(hash);
                     createManyData.push({
                         date: hash.date,
                         efficiency: parseFloat(hash.efficiency),
@@ -141,15 +175,18 @@ export async function GET(request: Request) {
             await prisma.hashDay.createMany({
                 data: createManyData,
                 skipDuplicates: true,
-            })
+            });
             // .catch((error: any) => {
             //     console.error("ERROR", error);
             //     // return NextResponse.json({ result: "error", message: error.message });
             // });
-
-            console.log("added: ", added, "updated: ", updated);
+            const missing = await fillInMissingDatesAsBlank(totalHashArray, user);
+            await prisma.hashDay.createMany({
+                data: missing,
+                skipDuplicates: true,
+            });
+            console.log("added: ", added, "updated: ", updated, "missed: ", missing.length);
+            return NextResponse.json({ result: "success", added: added, updated: updated, missed: missing.length });
         }
-
-        return NextResponse.json({ result: "success", added: added, updated: updated });
     }
 }

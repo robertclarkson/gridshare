@@ -151,7 +151,9 @@ function UserPanel() {
                                     queryClient.invalidateQueries({ queryKey: ["user"] });
                                     setImporting(false);
                                     const data = await response.json();
-                                    setUpdate("added: " + data.added + " updated: " + data.updated);
+                                    setUpdate(
+                                        "added: " + data.added + " updated: " + data.updated + " missed: " + data.missed
+                                    );
                                 })
                                 .catch((error) => {
                                     alert(error.message);
@@ -171,7 +173,9 @@ function UserPanel() {
                                 .then(async (response) => {
                                     queryClient.invalidateQueries({ queryKey: ["user"] });
                                     const data = await response.json();
-                                    setUpdate("added: " + data.added + " updated: " + data.updated);
+                                    setUpdate(
+                                        "added: " + data.added + " updated: " + data.updated + " missed: " + data.missed
+                                    );
                                 })
                                 .catch((error) => {
                                     alert(error.message);
