@@ -63,10 +63,10 @@ export async function GET(request: Request) {
             const nzdBTC = async (from: number, to: number) => {
                 return await fetch(
                     "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=nzd&from=" +
-                        from +
-                        "&to=" +
-                        to +
-                        "&precision=0"
+                    from +
+                    "&to=" +
+                    to +
+                    "&precision=0"
                 ).then((result) => {
                     return result.json().then((json) => {
                         if (json.prices) {
@@ -101,14 +101,15 @@ export async function GET(request: Request) {
                     const rate = rates.find((item: number[]) => {
                         return item[0] == new Date(hash.date).valueOf();
                     });
+                    console.log(hash);
                     createManyData.push({
                         date: hash.date,
                         efficiency: parseFloat(hash.efficiency),
                         hashrate: parseFloat(hash.hashrate),
                         revenue: parseFloat(hash.revenue),
-                        uptimePercentage: parseFloat(hash.uptimePercentage),
-                        uptimeTotalMinutes: parseInt(hash.uptimeTotalMinutes),
-                        uptimeTotalMachines: parseInt(hash.uptimeTotalMachines),
+                        uptimePercentage: hash.uptimePercentage ? parseFloat(hash.uptimePercentage) : 100,
+                        uptimeTotalMinutes: hash.uptimeTotalMinutes ? parseInt(hash.uptimeTotalMinutes) : 44550,
+                        uptimeTotalMachines: hash.uptimeTotalMachines ? parseInt(hash.uptimeTotalMachines) : 32,
                         averagePrice: parseFloat(rate ? rate[1] : 0),
                         userId: user.id,
                     });
@@ -136,15 +137,15 @@ export async function GET(request: Request) {
                     }
                 }
             });
-
-            await prisma.hashDay
-                .createMany({
-                    data: createManyData,
-                })
-                .catch((error: any) => {
-                    console.log("ERROR", error.message);
-                    console.log("ERROR", error.response.data);
-                });
+            // console.log(createManyData);
+            await prisma.hashDay.createMany({
+                data: createManyData,
+                skipDuplicates: true,
+            })
+            // .catch((error: any) => {
+            //     console.error("ERROR", error);
+            //     // return NextResponse.json({ result: "error", message: error.message });
+            // });
 
             console.log("added: ", added, "updated: ", updated);
         }
