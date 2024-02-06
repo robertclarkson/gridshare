@@ -50,6 +50,7 @@ model User {
     minerWatts          Int?
     electricityPriceNzd Float?
     coinAPIKey          String?
+    capex          Float?
 
     accounts Account[]
     sessions Session[]

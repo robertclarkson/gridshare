@@ -6,6 +6,7 @@ import { AxiosError } from "axios";
 import FieldEditor from "./FieldEditor";
 import { useState } from "react";
 import { Divider } from "@nextui-org/react";
+import Tooltip from "../components/Tooltip";
 const queryClient = new QueryClient();
 
 export default function UserSettings() {
@@ -115,6 +116,20 @@ function UserPanel() {
                         value={data.result.electricityPriceNzd}
                         mutation={mutation}
                     />
+                </div>
+            </div>
+            <Divider />
+            <div>
+                <label>
+                    Capex{" "}
+                    <Tooltip
+                        title="Capital Expenditure"
+                        content="What you spent on mining equipment minus GST. Only required if you want to see time to ROI"
+                    />
+                </label>
+
+                <div>
+                    $<FieldEditor id={data.result.id} field="capex" value={data.result.capex} mutation={mutation} />
                 </div>
             </div>
             <Divider />

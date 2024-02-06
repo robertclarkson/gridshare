@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     }
 }
 export async function POST(request: Request) {
-    const { luxorApiKey, minerWatts, electricityPriceNzd, luxorAccount } = await request.json();
+    const { luxorApiKey, minerWatts, electricityPriceNzd, luxorAccount, capex } = await request.json();
 
     const session = await getServerSession(authOptions);
     const userId = session ? session.userId : null; //find userID
@@ -65,6 +65,7 @@ export async function POST(request: Request) {
             luxorAccount: luxorAccount,
             ...(minerWatts != null && { minerWatts: parseInt(minerWatts) }),
             ...(electricityPriceNzd != null && { electricityPriceNzd: parseFloat(electricityPriceNzd) }),
+            ...(capex != null && { capex: parseFloat(capex) }),
         },
     });
 

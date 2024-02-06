@@ -80,10 +80,15 @@ export default async function Home() {
     const btcRemaining = totalBitcoin - totalSalesBTC;
     const remBtcValue = btcRemaining > 0 ? btcRemaining * latestBTCPrice : 0;
     const profit = remBtcValue + totalSalesNZD - totalElecCost;
+    const profitPerDay = user?.hashing?.length ? profit / user?.hashing.length : 0;
+
+    const roi = profit - (user?.capex ? user?.capex : 0);
+    const yrsToRoi = (roi * -1) / profitPerDay / 365;
+
     return (
         <main>
             <Card className="max-w-[500px] my-10 mx-auto  p-5">
-                <h1 className="text-2xl my-5">Mining Summary</h1>
+                <h1 className="text-2xl mb-5">Mining Summary</h1>
                 <table cellPadding={5}>
                     <tbody>
                         <tr>
@@ -129,7 +134,11 @@ export default async function Home() {
                         </tr>
                     </tbody>
                 </table>
-                <table cellPadding={5} className="my-5">
+                <p>Most recent reading: {user?.hashing[user?.hashing.length - 1].date.toDateString()}</p>
+            </Card>
+            <Card className="max-w-[500px] my-10 mx-auto  p-5">
+                <h1 className="text-2xl mb-5">Income</h1>
+                <table cellPadding={5} className="">
                     <tbody>
                         <tr>
                             <th className="border">Bitcoin Sold</th>
@@ -148,13 +157,35 @@ export default async function Home() {
                             <td className="border">${remBtcValue.toLocaleString()}</td>
                         </tr>
                         <tr>
-                            <th className="border">Actual Profit</th>
+                            <th className="border">Profit</th>
                             <td className="border">${profit.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Avg Daily Profit</th>
+                            <td className="border">${profitPerDay.toLocaleString()}</td>
                         </tr>
                     </tbody>
                 </table>
-                <p>&nbsp;</p>
-                <p>Most recent reading: {user?.hashing[user?.hashing.length - 1].date.toDateString()}</p>
+            </Card>
+
+            <Card className="max-w-[500px] my-10 mx-auto  p-5">
+                <h1 className="text-2xl mb-5">Investment</h1>
+                <table cellPadding={5} className="">
+                    <tbody>
+                        <tr>
+                            <th className="border">Capex</th>
+                            <td className="border">${user?.capex?.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">ROI</th>
+                            <td className="border">${roi.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Years to ROI</th>
+                            <td className="border">{yrsToRoi.toLocaleString()}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </Card>
         </main>
     );
