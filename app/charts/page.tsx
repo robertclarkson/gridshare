@@ -1,11 +1,13 @@
-import { graphQlClient } from "@/lib/client";
+"use client";
 
+import { graphQlClient } from "@/lib/client";
 import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import MiningChart from "./MiningChart";
 import { Card } from "@nextui-org/react";
 import { authOptions } from "../api/auth/[...nextauth]/authOptions";
+import { useState } from "react";
 
 const prisma = new PrismaClient();
 
@@ -13,11 +15,19 @@ const getUser = async (id: string) => {
     const profile = await prisma.user.findUnique({
         where: { id: id },
 
-        include: { hashing: { orderBy: { date: "asc" } } },
+        include: {
+            hashing: {
+                where: { date: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) } },
+                orderBy: { date: "asc" },
+            },
+        },
     });
     return profile;
 };
 export default async function Charts() {
+    const [start, setStart] = useState(new Date().toISOString().split("T")[0]);
+    const [end, setEnd] = useState(new Date().toISOString().split("T")[0]);
+
     const session: any = await getServerSession(authOptions);
     if (!session || !session.userId) {
         return (
@@ -76,6 +86,9 @@ export default async function Charts() {
     // console.log('sumscoremary', score.getHashrateScoreHistory.nodes)
     return (
         <main>
+            <input type="date" value={start} onChange={(event) => setStart(event.target.value)} />
+            <input type="date" value={end} onChange={(event) => setEnd(event.target.value)} />
+
             <MiningChart
                 data={hashRevenue}
                 options={{
