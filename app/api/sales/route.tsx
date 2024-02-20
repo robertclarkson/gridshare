@@ -17,7 +17,11 @@ export async function GET(request: Request) {
                 id: session.userId,
             },
             include: {
-                disposals: true,
+                disposals: {
+                    orderBy: {
+                        date: "desc",
+                    },
+                },
             },
         });
         if (user) return NextResponse.json(user?.disposals);
