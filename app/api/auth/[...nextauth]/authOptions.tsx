@@ -15,19 +15,19 @@ const maxAge = 30 * 24 * 60 * 60; // 30 days
  *
  * @note We don't add the email address to avoid needing to escape it, if you do, remember to sanitize it!
  */
-function html(params: { url: string; host: string; theme: Theme }) {
-    const { url, host, theme } = params;
+function html(params: { url: string; host: string; }) {
+    const { url, host } = params;
 
     const escapedHost = host.replace(/\./g, "&#8203;.");
 
-    const brandColor = theme.brandColor || "#346df1";
+    const brandColor = "#346df1";
     const color = {
         background: "#f9f9f9",
         text: "#444",
         mainBackground: "#fff",
         buttonBackground: brandColor,
         buttonBorder: brandColor,
-        buttonText: theme.buttonText || "#fff",
+        buttonText: "#fff",
     };
 
     return `
@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
             from: process.env.EMAIL_FROM,
             maxAge: 3600,
             async sendVerificationRequest(params) {
-                const { identifier, url, provider, theme } = params;
+                const { identifier, url, provider } = params;
                 const { host } = new URL(url);
                 // NOTE: You are not required to use `nodemailer`, use whatever you want.
                 const transport = nodemailer.createTransport(provider.server);
@@ -96,7 +96,7 @@ export const authOptions: NextAuthOptions = {
                     from: provider.from,
                     subject: `Sign in to ${host}`,
                     text: text({ url, host }),
-                    html: html({ url, host, theme }),
+                    html: html({ url, host }),
                 });
                 const failed = result.rejected.concat(result.pending).filter(Boolean);
                 if (failed.length) {
