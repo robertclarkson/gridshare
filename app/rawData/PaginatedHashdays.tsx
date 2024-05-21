@@ -27,10 +27,9 @@ const ChildComponent = () => {
                 if (result.error) throw new Error(result.error);
                 return result.result;
             });
-    const { isLoading, isError, error, data, isFetching, isPreviousData } = useQuery({
+    const { isLoading, isError, error, data, isFetching } = useQuery({
         queryKey: ["transactions", page],
         queryFn: () => fetchTransactions(page),
-        keepPreviousData: true,
     });
     if (isLoading) {
         return (
