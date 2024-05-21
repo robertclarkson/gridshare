@@ -1,8 +1,6 @@
-import { graphQlClient } from "@/lib/client";
-import { gql } from "@apollo/client";
+import { Card } from "@nextui-org/react";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { Card } from "@nextui-org/react";
 import { authOptions } from "../api/auth/[...nextauth]/authOptions";
 
 const prisma = new PrismaClient();
@@ -51,8 +49,18 @@ export default async function RawData() {
                         <th className="border">Uptime %</th>
                         <th className="border">Uptime mins</th>
                         <th className="border">Machines</th>
+                        <th className="border">NZD Price</th>
+                        <th className="border">Elec Cost</th>
+                        <th className="border">Mined NZD</th>
+                        <th className="border">Profit</th>
+                        <th className="border">DR NZD</th>
+                        
                     </tr>
                     {user?.hashing.map((score: any, index: number) => {
+                        const nzdValue = score.revenue * score.averagePrice;
+                        const drValue = (100-score.uptimePercentage) * 32 * 0.05;
+                        const elecCost = (score.uptimePercentage) * 32 * 0.12;
+                        const profit = nzdValue - elecCost;
                         return (
                             <tr key={index}>
                                 <td className="border">{score.date.toLocaleDateString()}</td>
@@ -62,6 +70,11 @@ export default async function RawData() {
                                 <td className="border">{score.uptimePercentage}</td>
                                 <td className="border">{score.uptimeTotalMinutes}</td>
                                 <td className="border">{score.uptimeTotalMachines}</td>
+                                <td className="border">{score.averagePrice.toLocaleString()}</td>
+                                <td className="border">{elecCost.toFixed(2)}</td>
+                                <td className="border">{nzdValue.toFixed(2)}</td>
+                                <td className="border">{profit.toFixed(2)}</td>
+                                <td className="border">{drValue.toFixed(2)}</td>
                             </tr>
                         );
                     })}
