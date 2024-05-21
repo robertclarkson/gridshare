@@ -2,6 +2,7 @@ import { Card } from "@nextui-org/react";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/authOptions";
+import PaginatedHashdays from "./PaginatedHashdays";
 
 const prisma = new PrismaClient();
 
@@ -37,49 +38,6 @@ export default async function RawData() {
     }
 
     return (
-        <main>
-            <h1 className="text-2xl my-5">Raw Data</h1>
-            <table cellPadding="3" cellSpacing="3" className="">
-                <tbody>
-                    <tr>
-                        <th className="border">Date</th>
-                        <th className="border">Efficiency</th>
-                        <th className="border">Hashrate</th>
-                        <th className="border">Revenue</th>
-                        <th className="border">Uptime %</th>
-                        <th className="border">Uptime mins</th>
-                        <th className="border">Machines</th>
-                        <th className="border">NZD Price</th>
-                        <th className="border">Elec Cost</th>
-                        <th className="border">Mined NZD</th>
-                        <th className="border">Profit</th>
-                        <th className="border">DR NZD</th>
-                        
-                    </tr>
-                    {user?.hashing.map((score: any, index: number) => {
-                        const nzdValue = score.revenue * score.averagePrice;
-                        const drValue = (100-score.uptimePercentage) * 32 * 0.05;
-                        const elecCost = (score.uptimePercentage) * 32 * 0.12;
-                        const profit = nzdValue - elecCost;
-                        return (
-                            <tr key={index}>
-                                <td className="border">{score.date.toLocaleDateString()}</td>
-                                <td className="border">{score.efficiency}</td>
-                                <td className="border">{score.hashrate}</td>
-                                <td className="border">{score.revenue}</td>
-                                <td className="border">{score.uptimePercentage}</td>
-                                <td className="border">{score.uptimeTotalMinutes}</td>
-                                <td className="border">{score.uptimeTotalMachines}</td>
-                                <td className="border">{score.averagePrice.toLocaleString()}</td>
-                                <td className="border">{elecCost.toFixed(2)}</td>
-                                <td className="border">{nzdValue.toFixed(2)}</td>
-                                <td className="border">{profit.toFixed(2)}</td>
-                                <td className="border">{drValue.toFixed(2)}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </main>
+        <PaginatedHashdays  />
     );
 }
