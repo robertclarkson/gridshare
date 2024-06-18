@@ -65,8 +65,8 @@ const ChildComponent = () => {
                         <th className="border">NZD Price</th>
                         <th className="border">Elec Cost</th>
                         <th className="border">Mined NZD</th>
-                        <th className="border">Profit</th>
                         <th className="border">DR NZD</th>
+                        <th className="border">Profit</th>
                         
                     </tr>
                     {data?.data.map((score: Prisma.HashDayGetPayload<{}>, index: number) => {
@@ -74,7 +74,7 @@ const ChildComponent = () => {
                         const nzdValue = score.revenue * score.averagePrice;
                         const drValue = (100-score.uptimePercentage) * 32 * 0.05;
                         const elecCost = (score.uptimePercentage) * 32 * 0.12;
-                        const profit = nzdValue - elecCost;
+                        const profit = nzdValue + drValue - elecCost;
                         return (
                             <tr key={index}>
                                 <td className="border">{new Date(score.date).toLocaleDateString()}</td>
@@ -87,8 +87,8 @@ const ChildComponent = () => {
                                 <td className="border">{score.averagePrice.toLocaleString()}</td>
                                 <td className="border">{elecCost.toFixed(2)}</td>
                                 <td className="border">{nzdValue.toFixed(2)}</td>
-                                <td className="border">{profit.toFixed(2)}</td>
                                 <td className="border">{drValue.toFixed(2)}</td>
+                                <td className="border">{profit.toFixed(2)}</td>
                             </tr>
                         );
                     })}
