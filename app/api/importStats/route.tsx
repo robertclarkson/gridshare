@@ -5,6 +5,7 @@ import { gql } from "@apollo/client";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/authOptions";
+import dayjs from "dayjs";
 
 const prisma = new PrismaClient();
 
@@ -37,9 +38,11 @@ const getHashrateScoreHistory = async (luxor_key: string, subaccount: string) =>
 const fillInMissingDatesAsBlank = async (totalHashArray: any, user: any) => {
     const firstDate = new Date(totalHashArray[0].date);
     const lastDate = new Date(totalHashArray[totalHashArray.length - 1].date);
+    console.log(firstDate, lastDate);
 
     const existing = await prisma.hashDay.findMany({});
-    console.log(firstDate, lastDate);
+    console.log("existing", existing.length);
+
     const dateArray = [];
     for (let i = firstDate; i <= lastDate; i.setDate(i.getDate() + 1)) {
         const found = existing.find((item: any) => {
@@ -119,10 +122,10 @@ export async function GET(request: Request) {
             //     new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
             // );
             const rates = await nzdBTC(
-                new Date(totalHashArray[0].date).valueOf() / 1000,
+                dayjs().subtract(365, "days").unix(),
                 new Date(totalHashArray[totalHashArray.length - 1].date).valueOf() / 1000
             );
-            // console.log(rates);
+            // console.log("rates", rates);
 
             const createManyData: any = [];
             totalHashArray.map(async (hash: any) => {
