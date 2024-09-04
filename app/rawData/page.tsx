@@ -36,7 +36,13 @@ export default async function RawData() {
             </Card>
         );
     }
-
+    if(!user) {
+        return (
+            <Card className="max-w-[500px] m-auto mh-5 p-5">
+                <h1>There was a problem fetching your data</h1>
+            </Card>
+        );
+    }
     return (
         <PaginatedHashdays user={user} />
     );

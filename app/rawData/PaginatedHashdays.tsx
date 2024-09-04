@@ -51,6 +51,12 @@ const ChildComponent = (props: { user: Prisma.UserGetPayload<{}> }) => {
     // useEffect(() => {
     //     console.log(data.data);
     // }, [data]);
+
+    let totalCost = 0;
+    let totalRevenue = 0;
+    let totalDR = 0;
+    let totalProfit = 0;
+    let totalMined = 0;
     return (
 
         <main>
@@ -81,6 +87,11 @@ const ChildComponent = (props: { user: Prisma.UserGetPayload<{}> }) => {
                         const drValue = (100-score.uptimePercentage)/100 * 32 * 24 * watts/1000 * 0.05;
                         const elecCost = (score.uptimeTotalMinutes/60) * watts/1000 * elec;
                         const profit = nzdValue + drValue - elecCost;
+                        totalCost += elecCost;
+                        totalRevenue += nzdValue;
+                        totalDR += drValue;
+                        totalProfit += profit;
+                        totalMined += score.revenue;
                         return (
                             <tr key={index}>
                                 <td className="border">{new Date(score.date).toLocaleDateString()}</td>
@@ -98,6 +109,30 @@ const ChildComponent = (props: { user: Prisma.UserGetPayload<{}> }) => {
                             </tr>
                         );
                     })}
+                    </tbody>
+                </table>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th className="border">Total Revenue</th>
+                            <td className="border">${totalRevenue.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total Cost</th>
+                            <td className="border">-${totalCost.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total DR</th>
+                            <td className="border">${totalDR.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total Profit</th>
+                            <td className="border">${totalProfit.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total Mined</th>
+                            <td className="border">{totalMined.toFixed(8)}</td>
+                        </tr>
                     </tbody>
                 </table>
                 <div className="my-4">
