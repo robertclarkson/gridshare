@@ -73,7 +73,7 @@ const ChildComponent = () => {
                         console.log(score);
                         const nzdValue = score.revenue * score.averagePrice;
                         const drValue = (100-score.uptimePercentage) * 32 * 0.05;
-                        const elecCost = (score.uptimePercentage) * 32 * 0.12;
+                        const elecCost = (score.uptimeTotalMinutes/60) * 3.3 * 0.12;
                         const profit = nzdValue + drValue - elecCost;
                         return (
                             <tr key={index}>
