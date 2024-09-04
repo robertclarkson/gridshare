@@ -38,6 +38,6 @@ export default async function RawData() {
     }
 
     return (
-        <PaginatedHashdays  />
+        <PaginatedHashdays user={user} />
     );
 }

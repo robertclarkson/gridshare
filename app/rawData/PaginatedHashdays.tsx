@@ -10,15 +10,21 @@ const limit = 30;
 
 const queryClient = new QueryClient();
 
-export default function PaginatedHashdays() {
+export default function PaginatedHashdays(props: { user: Prisma.UserGetPayload<{}> }) {
+    const { user } = props;
     return (
         <QueryClientProvider client={queryClient}>
-            <ChildComponent />
+            <ChildComponent user={user} />
         </QueryClientProvider>
     );
 }
 
-const ChildComponent = () => {
+const ChildComponent = (props: { user: Prisma.UserGetPayload<{}> }) => {
+    const { user } = props;
+
+    const watts = user?.minerWatts ? user.minerWatts : 0;
+    const elec = user?.electricityPriceNzd ? user.electricityPriceNzd : 0;
+
     const [page, setPage] = useState(1);
     const fetchTransactions = async (page: number) =>
         fetch("/api/storedData?offset=" + (page - 1) * limit + "&limit=" + limit)
@@ -41,7 +47,7 @@ const ChildComponent = () => {
     if (isError) {
         return <p>There was a problem fetching the data</p>;
     }
-
+    
     // useEffect(() => {
     //     console.log(data.data);
     // }, [data]);
@@ -72,8 +78,8 @@ const ChildComponent = () => {
                     {data?.data.map((score: Prisma.HashDayGetPayload<{}>, index: number) => {
                         console.log(score);
                         const nzdValue = score.revenue * score.averagePrice;
-                        const drValue = (100-score.uptimePercentage) * 32 * 0.05;
-                        const elecCost = (score.uptimeTotalMinutes/60) * 3.3 * 0.12;
+                        const drValue = (100-score.uptimePercentage)/100 * 32 * 24 * watts/1000 * 0.05;
+                        const elecCost = (score.uptimeTotalMinutes/60) * watts/1000 * elec;
                         const profit = nzdValue + drValue - elecCost;
                         return (
                             <tr key={index}>

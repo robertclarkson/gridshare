@@ -1,9 +1,7 @@
-import { graphQlClient } from "@/lib/client";
-import { gql } from "@apollo/client";
+import { Card } from "@nextui-org/react";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/authOptions";
-import { Card } from "@nextui-org/react";
 import Tooltip from "./components/Tooltip";
 const prisma = new PrismaClient();
 
@@ -55,16 +53,21 @@ export default async function Home() {
     let totalElecCost = 0;
     let totalProfit = 0;
     let latestBTCPrice = 0;
+    let totalDR= 0;
     user?.hashing.forEach((item: any) => {
         totalElec += ((item.uptimeTotalMinutes / 60) * watts) / 1000;
         totalBitcoin += parseFloat(item.revenue);
         //electricity cost = uptime mins / 60 = hrs * 3.3KW * 0.12c/kw
         const elect = (((item.uptimeTotalMinutes / 60) * watts) / 1000) * elec;
+
+        const drValue = (100-item.uptimePercentage)/100 * 32 * 24 * watts/1000 * 0.05;
+        totalDR+=drValue;
+
         totalElecCost += elect;
         let bitcoinValue = 0;
 
         bitcoinValue = item.averagePrice * parseFloat(item.revenue);
-        const profit = bitcoinValue - elect;
+        const profit = bitcoinValue - elect + drValue;
         totalProfit = totalProfit + profit;
         totalBitcoinValue += bitcoinValue;
         latestBTCPrice = item.averagePrice;
@@ -79,7 +82,7 @@ export default async function Home() {
 
     const btcRemaining = totalBitcoin - totalSalesBTC;
     const remBtcValue = btcRemaining > 0 ? btcRemaining * latestBTCPrice : 0;
-    const profit = remBtcValue + totalSalesNZD - totalElecCost;
+    const profit = remBtcValue + totalSalesNZD + totalDR - totalElecCost;
     const profitPerDay = user?.hashing?.length ? profit / user?.hashing.length : 0;
 
     const roi = profit - (user?.capex ? user?.capex : 0);
@@ -110,6 +113,10 @@ export default async function Home() {
                         <tr>
                             <th className="border">Total Electricity Cost</th>
                             <td className="border">${parseFloat(totalElecCost.toFixed(2)).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <th className="border">Total DR Rebate</th>
+                            <td className="border">${parseFloat(totalDR.toFixed(2)).toLocaleString()}</td>
                         </tr>
                         <tr>
                             <th className="border">
